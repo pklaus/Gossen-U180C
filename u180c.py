@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import pymodbus.client.sync
-import pymodbus.exceptions
 import logging
 import argparse
 from datetime import datetime as dt
@@ -422,7 +420,7 @@ class U180CException(NameError):
 class U180CAuthException(NameError):
     pass
 
-class U180CConnectionException(U180CException, pymodbus.exceptions.ConnectionException):
+class U180CConnectionException(U180CException):
     pass
 
 class U180C(object):
@@ -430,9 +428,15 @@ class U180C(object):
     def __init__(self, host, port=502):
         self.host = host
         self.port = port
-        self.client = pymodbus.client.sync.ModbusTcpClient(host, port=502)
-        self.client.connect()
-        self.set_properties()
+        import pymodbus.client.sync
+        import pymodbus.exceptions
+        self.pymodbus = pymodbus
+        try:
+            self.client = self.pymodbus.client.sync.ModbusTcpClient(host, port=502)
+            self.client.connect()
+            self.set_properties()
+        except pymodbus.exceptions.ConnectionException:
+            raise U180CConnectionException('Cannot connect')
 
     def set_properties(self):
         conf_vals = self.read_cc()
@@ -862,8 +866,8 @@ def main():
 
     try:
         u180c = U180CFactory(args.host)
-    except U180CException:
-        parser.error('Could not connect to host ' + args.host)
+    except U180CException as e:
+        parser.error('Could not connect to host ' + args.host + '\n' + str(e))
 
     try:
         if type(u180c) is U180CWeb:
