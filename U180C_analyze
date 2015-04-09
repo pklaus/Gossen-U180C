@@ -62,13 +62,8 @@ def main():
 
     args = parser.parse_args()
 
-    df = pd.io.parsers.read_csv(args.input_file, sep=';')
-
-    df['DateTime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'], format='%d/%m/%Y %H:%M:%S')
-    df.drop('Date', axis=1, inplace = True)
-    df.drop('Time', axis=1, inplace = True)
-    df.set_index('DateTime', inplace = True)
-
+    df = pd.io.parsers.read_csv(args.input_file, sep=';', parse_dates=[['Date', 'Time']], dayfirst=True)
+    df.set_index('Date_Time', inplace = True)
 
     print(msg)
     embed()
