@@ -9,163 +9,314 @@ import time
 import sys
 import struct
 
+
+# XML element name in
+# http://192.168.178.253/tmp/0_readings.xml?1428492576635
+# sn       AB1OB00413
+# paracnt  167
+# datet    8/4/2015 13:29:32
+# param0   232.495
+# ...
+# param165 01
+# param166 00
+
 # Readable Registers
-
 RR_RAW = {
-
+  'mapping' : {
+    'key': 'api_no',
+    0    : 'code',
+    1    : 'csv_code',
+    2    : 'descr',
+    3    : 'descr2',
+    4    : 'related_to',
+    5    : 'sign',
+    6    : 'reg_int_start_addr',
+    7    : 'reg_int_num_words',
+    8    : 'reg_int_divisor',
+    9    : 'reg_ieee_start_addr',
+    10   : 'reg_ieee_num_words',
+    11   : 'unit'
+  },
   # REAL-TIME VALUES
-  'V1' :  ('L-N voltage phase 1',        1, False, 0x00, 2, 1000., 0x1000, 2,   'V'),
-  'V2' :  ('L-N voltage phase 2',        2, False, 0x02, 2, 1000., 0x1002, 2,   'V'),
-  'V3' :  ('L-N voltage phase 3',        3, False, 0x04, 2, 1000., 0x1004, 2,   'V'),
-  'V12':  ('L-L voltage line 12',    [1,2], False, 0x06, 2, 1000., 0x1006, 2,   'V'),
-  'V23':  ('L-L voltage line 23',    [2,3], False, 0x08, 2, 1000., 0x1008, 2,   'V'),
-  'V31':  ('L-L voltage line 31',    [3,1], False, 0x0A, 2, 1000., 0x100A, 2,   'V'),
-  'V∑' :  ('System voltage',         'sys', False, 0x0C, 2, 1000., 0x100C, 2,   'V'),
-  'A1' :  ('Phase 1 current',            1, True,  0x0E, 2, 1000., 0x100E, 2,   'A'),
-  'A2' :  ('Phase 2 current',            2, True,  0x10, 2, 1000., 0x1010, 2,   'A'),
-  'A3' :  ('Phase 3 current',            3, True,  0x12, 2, 1000., 0x1012, 2,   'A'),
-  'AN' :  ('Neutral current',        'sys', True,  0x14, 2, 1000., 0x1014, 2,   'A'),
-  'A∑' :  ('System current',         'sys', True,  0x16, 2, 1000., 0x1016, 2,   'A'),
-  'PF1':  ('Phase 1 power factor',       1, True,  0x18, 1, 1000., 0x1018, 2,  None),
-  'PF2':  ('Phase 2 power factor',       2, True,  0x19, 1, 1000., 0x101A, 2,  None),
-  'PF3':  ('Phase 3 power factor',       3, True,  0x1A, 1, 1000., 0x101C, 2,  None),
-  'PF∑':  ('System power factor',    'sys', True,  0x1B, 1, 1000., 0x101E, 2,  None),
-  'P1' :  ('Phase 1 active power',       1, True,  0x1C, 3, 1000., 0x1020, 2,   'W'),
-  'P2' :  ('Phase 2 active power',       2, True,  0x1F, 3, 1000., 0x1022, 2,   'W'),
-  'P3' :  ('Phase 3 active power',       3, True,  0x22, 3, 1000., 0x1024, 2,   'W'),
-  'P∑' :  ('System active power',    'sys', True,  0x25, 3, 1000., 0x1026, 2,   'W'),
-  'S1' :  ('Phase 1 apparent power',     1, True,  0x28, 3, 1000., 0x1028, 2,  'VA'),
-  'S2' :  ('Phase 2 apparent power',     2, True,  0x2B, 3, 1000., 0x102A, 2,  'VA'),
-  'S3' :  ('Phase 3 apparent power',     3, True,  0x2E, 3, 1000., 0x102C, 2,  'VA'),
-  'S∑' :  ('System apparent power',  'sys', True,  0x31, 3, 1000., 0x102E, 2,  'VA'),
-  'Q1' :  ('Phase 1 reactive power',     1, True,  0x34, 3, 1000., 0x1030, 2, 'var'),
-  'Q2' :  ('Phase 2 reactive power',     2, True,  0x37, 3, 1000., 0x1032, 2, 'var'),
-  'Q3' :  ('Phase 3 reactive power',     3, True,  0x3A, 3, 1000., 0x1034, 2, 'var'),
-  'Q∑' :  ('System reactive power',  'sys', True,  0x3D, 3, 1000., 0x1036, 2, 'var'),
-  'F'  :  ('Frequency',              'sys', False, 0x40, 1, 1000., 0x1038, 2,  'Hz'),
-  'Phase sequence': ('',             'sys', False, 0x41, 1,     1, 0x103A, 2,  None),
-
+  0   :  ('V1',  'V1N',      'Phase 1 Voltage',        'L-N voltage phase 1',        1, False, 0x00, 2, 1000., 0x1000, 2,   'V'),
+  1   :  ('V2',  'V2N',      'Phase 2 Voltage',        'L-N voltage phase 2',        2, False, 0x02, 2, 1000., 0x1002, 2,   'V'),
+  2   :  ('V3',  'V3N',      'Phase 3 Voltage',        'L-N voltage phase 3',        3, False, 0x04, 2, 1000., 0x1004, 2,   'V'),
+  3   :  ('V12', 'V12',      'Line 12 Voltage',        'L-L voltage line 12',    [1,2], False, 0x06, 2, 1000., 0x1006, 2,   'V'),
+  4   :  ('V23', 'V23',      'Line 23 Voltage',        'L-L voltage line 23',    [2,3], False, 0x08, 2, 1000., 0x1008, 2,   'V'),
+  5   :  ('V31', 'V31',      'Line 31 Voltage',        'L-L voltage line 31',    [3,1], False, 0x0A, 2, 1000., 0x100A, 2,   'V'),
+  6   :  ('V∑',  'VSYS',     'System Voltage',         'System voltage',         'sys', False, 0x0C, 2, 1000., 0x100C, 2,   'V'),
+  7   :  ('A1',  'A1',       'Phase 1 Current',        'Phase 1 current',            1, True,  0x0E, 2, 1000., 0x100E, 2,   'A'),
+  8   :  ('A2',  'A2',       'Phase 2 Current',        'Phase 2 current',            2, True,  0x10, 2, 1000., 0x1010, 2,   'A'),
+  9   :  ('A3',  'A3',       'Phase 3 Current',        'Phase 3 current',            3, True,  0x12, 2, 1000., 0x1012, 2,   'A'),
+  10  :  ('AN',  'AN',       'Neutral Current',        'Neutral current',        'sys', True,  0x14, 2, 1000., 0x1014, 2,   'A'),
+  11  :  ('A∑',  'ASYS',     'System Current',         'System current',         'sys', True,  0x16, 2, 1000., 0x1016, 2,   'A'),
+  12  :  ('PF1', 'PF1',      'Phase 1 Power Factor',   'Phase 1 power factor',       1, True,  0x18, 1, 1000., 0x1018, 2,  None),
+  13  :  ('PF2', 'PF2',      'Phase 2 Power Factor',   'Phase 2 power factor',       2, True,  0x19, 1, 1000., 0x101A, 2,  None),
+  14  :  ('PF3', 'PF3',      'Phase 3 Power Factor',   'Phase 3 power factor',       3, True,  0x1A, 1, 1000., 0x101C, 2,  None),
+  15  :  ('PF∑', 'PFSYS',    'System Power Factor',    'System power factor',    'sys', True,  0x1B, 1, 1000., 0x101E, 2,  None),
+  16  :  ('P1',  'P1',       'Phase 1 Active Power',   'Phase 1 active power',       1, True,  0x1C, 3, 1000., 0x1020, 2,   'W'),
+  17  :  ('P2',  'P2',       'Phase 2 Active Power',   'Phase 2 active power',       2, True,  0x1F, 3, 1000., 0x1022, 2,   'W'),
+  18  :  ('P3',  'P3',       'Phase 3 Active Power',   'Phase 3 active power',       3, True,  0x22, 3, 1000., 0x1024, 2,   'W'),
+  19  :  ('P∑',  'PSYS',     'System Active Power',    'System active power',    'sys', True,  0x25, 3, 1000., 0x1026, 2,   'W'),
+  20  :  ('S1',  'S1',       'Phase 1 Apparent Power', 'Phase 1 apparent power',     1, True,  0x28, 3, 1000., 0x1028, 2,  'VA'),
+  21  :  ('S2',  'S2',       'Phase 2 Apparent Power', 'Phase 2 apparent power',     2, True,  0x2B, 3, 1000., 0x102A, 2,  'VA'),
+  22  :  ('S3',  'S3',       'Phase 3 Apparent Power', 'Phase 3 apparent power',     3, True,  0x2E, 3, 1000., 0x102C, 2,  'VA'),
+  23  :  ('S∑',  'SSYS',     'System Apparent Power',  'System apparent power',  'sys', True,  0x31, 3, 1000., 0x102E, 2,  'VA'),
+  24  :  ('Q1',  'Q1',       'Phase 1 Reactive Power', 'Phase 1 reactive power',     1, True,  0x34, 3, 1000., 0x1030, 2, 'var'),
+  25  :  ('Q2',  'Q2',       'Phase 2 Reactive Power', 'Phase 2 reactive power',     2, True,  0x37, 3, 1000., 0x1032, 2, 'var'),
+  26  :  ('Q3',  'Q3',       'Phase 3 Reactive Power', 'Phase 3 reactive power',     3, True,  0x3A, 3, 1000., 0x1034, 2, 'var'),
+  27  :  ('Q∑',  'QSYS',     'System Reactive Power',  'System reactive power',  'sys', True,  0x3D, 3, 1000., 0x1036, 2, 'var'),
+  28  :  ('F',   'F',        'Frequency',              'Frequency',              'sys', False, 0x40, 1, 1000., 0x1038, 2,  'Hz'),
+  29  :  ('po',  'PHASE_SEQ','Phase Order',            'Phase sequence',         'sys', False, 0x41, 1,     1, 0x103A, 2,  None),
   # COUNTER VALUES
-  '+kWh1'     : ('Phase 1 imported active energy',               1, False, 0x100, 3, 10., 0x1100, 2,   'Wh'),
-  '+kWh2'     : ('Phase 2 imported active energy',               2, False, 0x103, 3, 10., 0x1102, 2,   'Wh'),
-  '+kWh3'     : ('Phase 3 imported active energy',               3, False, 0x106, 3, 10., 0x1104, 2,   'Wh'),
-  '+kWh∑'     : ('System imported active energy',            'sys', False, 0x109, 3, 10., 0x1106, 2,   'Wh'),
-  '-kWh1'     : ('Phase 1 exported active energy',               1, False, 0x10c, 3, 10., 0x1108, 2,   'Wh'),
-  '-kWh2'     : ('Phase 2 exported active energy',               2, False, 0x10f, 3, 10., 0x110a, 2,   'Wh'),
-  '-kWh3'     : ('Phase 3 exported active energy',               3, False, 0x112, 3, 10., 0x110c, 2,   'Wh'),
-  '-kWh∑'     : ('System exported active energy',            'sys', False, 0x115, 3, 10., 0x110e, 2,   'Wh'),
-  '+kVAh1-L'  : ('Phase 1 imported lagging apparent energy',     1, False, 0x118, 3, 10., 0x1110, 2,  'VAh'),
-  '+kVAh2-L'  : ('Phase 2 imported lagging apparent energy',     2, False, 0x11b, 3, 10., 0x1112, 2,  'VAh'),
-  '+kVAh3-L'  : ('Phase 3 imported lagging apparent energy',     3, False, 0x11e, 3, 10., 0x1114, 2,  'VAh'),
-  '+kVAh∑-L'  : ('System imported lagging apparent energy',  'sys', False, 0x121, 3, 10., 0x1116, 2,  'VAh'),
-  '-kVAh1-L'  : ('Phase 1 exported lagging apparent energy',     1, False, 0x124, 3, 10., 0x1118, 2,  'VAh'),
-  '-kVAh2-L'  : ('Phase 2 exported lagging apparent energy',     2, False, 0x127, 3, 10., 0x111a, 2,  'VAh'),
-  '-kVAh3-L'  : ('Phase 3 exported lagging apparent energy',     3, False, 0x12a, 3, 10., 0x111c, 2,  'VAh'),
-  '-kVAh∑-L'  : ('System exported lagging apparent energy',  'sys', False, 0x12d, 3, 10., 0x111e, 2,  'VAh'),
-  '+kVAh1-C'  : ('Phase 1 imported leading apparent energy',     1, False, 0x130, 3, 10., 0x1120, 2,  'VAh'),
-  '+kVAh2-C'  : ('Phase 2 imported leading apparent energy',     2, False, 0x133, 3, 10., 0x1122, 2,  'VAh'),
-  '+kVAh3-C'  : ('Phase 3 imported leading apparent energy',     3, False, 0x136, 3, 10., 0x1124, 2,  'VAh'),
-  '+kVAh∑-C'  : ('System imported leading apparent energy',  'sys', False, 0x139, 3, 10., 0x1126, 2,  'VAh'),
-  '-kVAh1-C'  : ('Phase 1 exported leading apparent energy',     1, False, 0x13c, 3, 10., 0x1128, 2,  'VAh'),
-  '-kVAh2-C'  : ('Phase 2 exported leading apparent energy',     2, False, 0x13f, 3, 10., 0x112a, 2,  'VAh'),
-  '-kVAh3-C'  : ('Phase 3 exported leading apparent energy',     3, False, 0x142, 3, 10., 0x112c, 2,  'VAh'),
-  '-kVAh∑-C'  : ('System exported leading apparent energy',  'sys', False, 0x145, 3, 10., 0x112e, 2,  'VAh'),
-  '+kvarh1-L' : ('Phase 1 imported lagging reactive energy',     1, False, 0x148, 3, 10., 0x1130, 2, 'varh'),
-  '+kvarh2-L' : ('Phase 2 imported lagging reactive energy',     2, False, 0x14b, 3, 10., 0x1132, 2, 'varh'),
-  '+kvarh3-L' : ('Phase 3 imported lagging reactive energy',     3, False, 0x14e, 3, 10., 0x1134, 2, 'varh'),
-  '+kvarh∑-L' : ('System imported lagging reactive energy',  'sys', False, 0x151, 3, 10., 0x1136, 2, 'varh'),
-  '-kvarh1-L' : ('Phase 1 exported lagging reactive energy',     1, False, 0x154, 3, 10., 0x1138, 2, 'varh'),
-  '-kvarh2-L' : ('Phase 2 exported lagging reactive energy',     2, False, 0x157, 3, 10., 0x113a, 2, 'varh'),
-  '-kvarh3-L' : ('Phase 3 exported lagging reactive energy',     3, False, 0x15a, 3, 10., 0x113c, 2, 'varh'),
-  '-kvarh∑-L' : ('System exported lagging reactive energy',  'sys', False, 0x15d, 3, 10., 0x113e, 2, 'varh'),
-  '+kvarh1-C' : ('Phase 1 imported leading reactive energy',     1, False, 0x160, 3, 10., 0x1140, 2, 'varh'),
-  '+kvarh2-C' : ('Phase 2 imported leading reactive energy',     2, False, 0x163, 3, 10., 0x1142, 2, 'varh'),
-  '+kvarh3-C' : ('Phase 3 imported leading reactive energy',     3, False, 0x166, 3, 10., 0x1144, 2, 'varh'),
-  '+kvarh∑-C' : ('System imported leading reactive energy',  'sys', False, 0x169, 3, 10., 0x1146, 2, 'varh'),
-  '-kvarh1-C' : ('Phase 1 exported leading reactive energy',     1, False, 0x16c, 3, 10., 0x1148, 2, 'varh'),
-  '-kvarh2-C' : ('Phase 2 exported leading reactive energy',     2, False, 0x16f, 3, 10., 0x114a, 2, 'varh'),
-  '-kvarh3-C' : ('Phase 3 exported leading reactive energy',     3, False, 0x172, 3, 10., 0x114c, 2, 'varh'),
-  '-kvarh∑-C' : ('System exported leading reactive energy',  'sys', False, 0x175, 3, 10., 0x114e, 2, 'varh'),
-
+  30  :  ('+kWh1_tot',     'kWh1_imp',      'Phase 1 Imported Active Energy, Total',                 'Phase 1 imported active energy',               1, False, 0x100, 3, 10., 0x1100, 2,   'Wh'),
+  31  :  ('+kWh2_tot',     'kWh2_imp',      'Phase 2 Imported Active Energy, Total',                 'Phase 2 imported active energy',               2, False, 0x103, 3, 10., 0x1102, 2,   'Wh'),  
+  32  :  ('+kWh3_tot',     'kWh3_imp',      'Phase 3 Imported Active Energy, Total',                 'Phase 3 imported active energy',               3, False, 0x106, 3, 10., 0x1104, 2,   'Wh'),  
+  33  :  ('+kWh∑_tot',     'kWhSYS_imp',    'System Imported Active Energy, Total',                  'System imported active energy',            'sys', False, 0x109, 3, 10., 0x1106, 2,   'Wh'),  
+  34  :  ('-kWh1_tot',     'kWh1_exp',      'Phase 1 Exported Active Energy, Total',                 'Phase 1 exported active energy',               1, False, 0x10c, 3, 10., 0x1108, 2,   'Wh'),  
+  35  :  ('-kWh2_tot',     'kWh2_exp',      'Phase 2 Exported Active Energy, Total',                 'Phase 2 exported active energy',               2, False, 0x10f, 3, 10., 0x110a, 2,   'Wh'),  
+  36  :  ('-kWh3_tot',     'kWh3_exp',      'Phase 3 Exported Active Energy, Total',                 'Phase 3 exported active energy',               3, False, 0x112, 3, 10., 0x110c, 2,   'Wh'),  
+  37  :  ('-kWh∑_tot',     'kWh SYS_exp',   'System Exported Active Energy, Total',                  'System exported active energy',            'sys', False, 0x115, 3, 10., 0x110e, 2,   'Wh'),  
+  38  :  ('+kVAh1-L_tot',  'kVAh1_L_imp',   'Phase 1 Imported Inductive Apparent Energy, Total',     'Phase 1 imported lagging apparent energy',     1, False, 0x118, 3, 10., 0x1110, 2,  'VAh'),  
+  39  :  ('+kVAh2-L_tot',  'kVAh2_L_imp',   'Phase 2 Imported Inductive Apparent Energy, Total',     'Phase 2 imported lagging apparent energy',     2, False, 0x11b, 3, 10., 0x1112, 2,  'VAh'),  
+  40  :  ('+kVAh3-L_tot',  'kVAh3_L_imp',   'Phase 3 Imported Inductive Apparent Energy, Total',     'Phase 3 imported lagging apparent energy',     3, False, 0x11e, 3, 10., 0x1114, 2,  'VAh'),  
+  41  :  ('+kVAh∑-L_tot',  'kVAhSYS_L_imp', 'System Imported Inductive Apparent Energy, Total',      'System imported lagging apparent energy',  'sys', False, 0x121, 3, 10., 0x1116, 2,  'VAh'),  
+  42  :  ('-kVAh1-L_tot',  'kVAh1_L_exp',   'Phase 1 Exported Inductive Apparent Energy, Total',     'Phase 1 exported lagging apparent energy',     1, False, 0x124, 3, 10., 0x1118, 2,  'VAh'),  
+  43  :  ('-kVAh2-L_tot',  'kVAh2_L_exp',   'Phase 2 Exported Inductive Apparent Energy, Total',     'Phase 2 exported lagging apparent energy',     2, False, 0x127, 3, 10., 0x111a, 2,  'VAh'),  
+  44  :  ('-kVAh3-L_tot',  'kVAh3_L_exp',   'Phase 3 Exported Inductive Apparent Energy, Total',     'Phase 3 exported lagging apparent energy',     3, False, 0x12a, 3, 10., 0x111c, 2,  'VAh'),  
+  45  :  ('-kVAh∑-L_tot',  'kVAhSYS_L_exp', 'System Exported Inductive Apparent Energy, Total',      'System exported lagging apparent energy',  'sys', False, 0x12d, 3, 10., 0x111e, 2,  'VAh'),  
+  46  :  ('+kVAh1-C_tot',  'kVAh1_C_imp',   'Phase 1 Imported Capacitive Apparent Energy, Total',    'Phase 1 imported leading apparent energy',     1, False, 0x130, 3, 10., 0x1120, 2,  'VAh'),  
+  47  :  ('+kVAh2-C_tot',  'kVAh2_C_imp',   'Phase 2 Imported Capacitive Apparent Energy, Total',    'Phase 2 imported leading apparent energy',     2, False, 0x133, 3, 10., 0x1122, 2,  'VAh'),  
+  48  :  ('+kVAh3-C_tot',  'kVAh3_C_imp',   'Phase 3 Imported Capacitive Apparent Energy, Total',    'Phase 3 imported leading apparent energy',     3, False, 0x136, 3, 10., 0x1124, 2,  'VAh'),  
+  49  :  ('+kVAh∑-C_tot',  'kVAhSYS_C_imp', 'System Imported Capacitive Apparent Energy, Total',     'System imported leading apparent energy',  'sys', False, 0x139, 3, 10., 0x1126, 2,  'VAh'),  
+  50  :  ('-kVAh1-C_tot',  'kVAh1_C_exp',   'Phase 1 Exported Capacitive Apparent Energy, Total',    'Phase 1 exported leading apparent energy',     1, False, 0x13c, 3, 10., 0x1128, 2,  'VAh'),  
+  51  :  ('-kVAh2-C_tot',  'kVAh2_C_exp',   'Phase 2 Exported Capacitive Apparent Energy, Total',    'Phase 2 exported leading apparent energy',     2, False, 0x13f, 3, 10., 0x112a, 2,  'VAh'),  
+  52  :  ('-kVAh3-C_tot',  'kVAh3_C_exp',   'Phase 3 Exported Capacitive Apparent Energy, Total',    'Phase 3 exported leading apparent energy',     3, False, 0x142, 3, 10., 0x112c, 2,  'VAh'),  
+  53  :  ('-kVAh∑-C_tot',  'kVAhSYS_C_exp', 'System Exported Capacitive Apparent Energy, Total',     'System exported leading apparent energy',  'sys', False, 0x145, 3, 10., 0x112e, 2,  'VAh'),  
+  54  :  ('+kvarh1-L_tot', 'kvarh1_L_imp',  'Phase 1 Imported Inductive Reactive Energy, Total',     'Phase 1 imported lagging reactive energy',     1, False, 0x148, 3, 10., 0x1130, 2, 'varh'),  
+  55  :  ('+kvarh2-L_tot', 'kvarh2_L_imp',  'Phase 2 Imported Inductive Reactive Energy, Total',     'Phase 2 imported lagging reactive energy',     2, False, 0x14b, 3, 10., 0x1132, 2, 'varh'),  
+  56  :  ('+kvarh3-L_tot', 'kvarh3_L_imp',  'Phase 3 Imported Inductive Reactive Energy, Total',     'Phase 3 imported lagging reactive energy',     3, False, 0x14e, 3, 10., 0x1134, 2, 'varh'),  
+  57  :  ('+kvarh∑-L_tot', 'kvarhSYS_L_imp','System Imported Inductive Reactive Energy, Total',      'System imported lagging reactive energy',  'sys', False, 0x151, 3, 10., 0x1136, 2, 'varh'),  
+  58  :  ('-kvarh1-L_tot', 'kvarh1_L_exp',  'Phase 1 Exported Inductive Reactive Energy, Total',     'Phase 1 exported lagging reactive energy',     1, False, 0x154, 3, 10., 0x1138, 2, 'varh'),  
+  59  :  ('-kvarh2-L_tot', 'kvarh2_L_exp',  'Phase 2 Exported Inductive Reactive Energy, Total',     'Phase 2 exported lagging reactive energy',     2, False, 0x157, 3, 10., 0x113a, 2, 'varh'),  
+  60  :  ('-kvarh3-L_tot', 'kvarh3_L_exp',  'Phase 3 Exported Inductive Reactive Energy, Total',     'Phase 3 exported lagging reactive energy',     3, False, 0x15a, 3, 10., 0x113c, 2, 'varh'),  
+  61  :  ('-kvarh∑-L_tot', 'kvarhSYS_L_exp','System Exported Inductive Reactive Energy, Total',      'System exported lagging reactive energy',  'sys', False, 0x15d, 3, 10., 0x113e, 2, 'varh'),  
+  62  :  ('+kvarh1-C_tot', 'kvarh1_C_imp',  'Phase 1 Imported Capacitive Reactive Energy, Total',    'Phase 1 imported leading reactive energy',     1, False, 0x160, 3, 10., 0x1140, 2, 'varh'),  
+  63  :  ('+kvarh2-C_tot', 'kvarh2_C_imp',  'Phase 2 Imported Capacitive Reactive Energy, Total',    'Phase 2 imported leading reactive energy',     2, False, 0x163, 3, 10., 0x1142, 2, 'varh'),  
+  64  :  ('+kvarh3-C_tot', 'kvarh3_C_imp',  'Phase 3 Imported Capacitive Reactive Energy, Total',    'Phase 3 imported leading reactive energy',     3, False, 0x166, 3, 10., 0x1144, 2, 'varh'),  
+  65  :  ('+kvarh∑-C_tot', 'kvarhSYS_C_imp','System Imported Capacitive Reactive Energy, Total',     'System imported leading reactive energy',  'sys', False, 0x169, 3, 10., 0x1146, 2, 'varh'),  
+  66  :  ('-kvarh1-C_tot', 'kvarh1_C_exp',  'Phase 1 Exported Capacitive Reactive Energy, Total',    'Phase 1 exported leading reactive energy',     1, False, 0x16c, 3, 10., 0x1148, 2, 'varh'),  
+  67  :  ('-kvarh2-C_tot', 'kvarh2_C_exp',  'Phase 2 Exported Capacitive Reactive Energy, Total',    'Phase 2 exported leading reactive energy',     2, False, 0x16f, 3, 10., 0x114a, 2, 'varh'),  
+  68  :  ('-kvarh3-C_tot', 'kvarh3_C_exp',  'Phase 3 Exported Capacitive Reactive Energy, Total',    'Phase 3 exported leading reactive energy',     3, False, 0x172, 3, 10., 0x114c, 2, 'varh'),  
+  69  :  ('-kvarh∑-C_tot', 'kvarhSYS_C_exp','System Exported Capacitive Reactive Energy, Total',     'System exported leading reactive energy',  'sys', False, 0x175, 3, 10., 0x114e, 2, 'varh'),  
   # TARIFF 1: Counter Address + 0x0100
+  70  :  ('+kWh1_t1',     'kWh1_T1_imp',      'Phase 1 Imported Active Energy, Tariff 1',              'Phase 1 imported active energy',               1, False, 0x100, 3, 10., 0x1200, 2,   'Wh'),
+  71  :  ('+kWh2_t1',     'kWh2_T1_imp',      'Phase 2 Imported Active Energy, Tariff 1',              'Phase 2 imported active energy',               2, False, 0x103, 3, 10., 0x1202, 2,   'Wh'),  
+  72  :  ('+kWh3_t1',     'kWh3_T1_imp',      'Phase 3 Imported Active Energy, Tariff 1',              'Phase 3 imported active energy',               3, False, 0x106, 3, 10., 0x1204, 2,   'Wh'),  
+  73  :  ('+kWh∑_t1',     'kWhSYS_T1_imp',    'System Imported Active Energy, Tariff 1',               'System imported active energy',            'sys', False, 0x109, 3, 10., 0x1206, 2,   'Wh'),  
+  74  :  ('-kWh1_t1',     'kWh1_T1_exp',      'Phase 1 Exported Active Energy, Tariff 1',              'Phase 1 exported active energy',               1, False, 0x10c, 3, 10., 0x1208, 2,   'Wh'),  
+  75  :  ('-kWh2_t1',     'kWh2_T1_exp',      'Phase 2 Exported Active Energy, Tariff 1',              'Phase 2 exported active energy',               2, False, 0x10f, 3, 10., 0x120a, 2,   'Wh'),  
+  76  :  ('-kWh3_t1',     'kWh3_T1_exp',      'Phase 3 Exported Active Energy, Tariff 1',              'Phase 3 exported active energy',               3, False, 0x112, 3, 10., 0x120c, 2,   'Wh'),  
+  77  :  ('-kWh∑_t1',     'kWhSYS_T1_exp',    'System Exported Active Energy, Tariff 1',               'System exported active energy',            'sys', False, 0x115, 3, 10., 0x120e, 2,   'Wh'),  
+  78  :  ('+kVAh1-L_t1',  'kVAh1_L_T1_imp',   'Phase 1 Imported Inductive Apparent Energy, Tariff 1',  'Phase 1 imported lagging apparent energy',     1, False, 0x118, 3, 10., 0x1210, 2,  'VAh'),  
+  79  :  ('+kVAh2-L_t1',  'kVAh2_L_T1_imp',   'Phase 2 Imported Inductive Apparent Energy, Tariff 1',  'Phase 2 imported lagging apparent energy',     2, False, 0x11b, 3, 10., 0x1212, 2,  'VAh'),  
+  80  :  ('+kVAh3-L_t1',  'kVAh3_L_T1_imp',   'Phase 3 Imported Inductive Apparent Energy, Tariff 1',  'Phase 3 imported lagging apparent energy',     3, False, 0x11e, 3, 10., 0x1214, 2,  'VAh'),  
+  81  :  ('+kVAh∑-L_t1',  'kVAhSYS_L_T1_imp', 'System Imported Inductive Apparent Energy, Tariff 1',   'System imported lagging apparent energy',  'sys', False, 0x121, 3, 10., 0x1216, 2,  'VAh'),  
+  82  :  ('-kVAh1-L_t1',  'kVAh1_L_T1_exp',   'Phase 1 Exported Inductive Apparent Energy, Tariff 1',  'Phase 1 exported lagging apparent energy',     1, False, 0x124, 3, 10., 0x1218, 2,  'VAh'),  
+  83  :  ('-kVAh2-L_t1',  'kVAh2_L_T1_exp',   'Phase 2 Exported Inductive Apparent Energy, Tariff 1',  'Phase 2 exported lagging apparent energy',     2, False, 0x127, 3, 10., 0x121a, 2,  'VAh'),  
+  84  :  ('-kVAh3-L_t1',  'kVAh3_L_T1_exp',   'Phase 3 Exported Inductive Apparent Energy, Tariff 1',  'Phase 3 exported lagging apparent energy',     3, False, 0x12a, 3, 10., 0x121c, 2,  'VAh'),  
+  85  :  ('-kVAh∑-L_t1',  'kVAhSYS_L_T1_exp', 'System Exported Inductive Apparent Energy, Tariff 1',   'System exported lagging apparent energy',  'sys', False, 0x12d, 3, 10., 0x121e, 2,  'VAh'),  
+  86  :  ('+kVAh1-C_t1',  'kVAh1_C_T1_imp',   'Phase 1 Imported Capacitive Apparent Energy, Tariff 1', 'Phase 1 imported leading apparent energy',     1, False, 0x130, 3, 10., 0x1220, 2,  'VAh'),  
+  87  :  ('+kVAh2-C_t1',  'kVAh2_C_T1_imp',   'Phase 2 Imported Capacitive Apparent Energy, Tariff 1', 'Phase 2 imported leading apparent energy',     2, False, 0x133, 3, 10., 0x1222, 2,  'VAh'),  
+  88  :  ('+kVAh3-C_t1',  'kVAh3_C_T1_imp',   'Phase 3 Imported Capacitive Apparent Energy, Tariff 1', 'Phase 3 imported leading apparent energy',     3, False, 0x136, 3, 10., 0x1224, 2,  'VAh'),  
+  89  :  ('+kVAh∑-C_t1',  'kVAhSYS_C_T1_imp', 'System Imported Capacitive Apparent Energy, Tariff 1',  'System imported leading apparent energy',  'sys', False, 0x139, 3, 10., 0x1226, 2,  'VAh'),  
+  90  :  ('-kVAh1-C_t1',  'kVAh1_C_T1_exp',   'Phase 1 Exported Capacitive Apparent Energy, Tariff 1', 'Phase 1 exported leading apparent energy',     1, False, 0x13c, 3, 10., 0x1228, 2,  'VAh'),  
+  91  :  ('-kVAh2-C_t1',  'kVAh2_C_T1_exp',   'Phase 2 Exported Capacitive Apparent Energy, Tariff 1', 'Phase 2 exported leading apparent energy',     2, False, 0x13f, 3, 10., 0x122a, 2,  'VAh'),  
+  92  :  ('-kVAh3-C_t1',  'kVAh3_C_T1_exp',   'Phase 3 Exported Capacitive Apparent Energy, Tariff 1', 'Phase 3 exported leading apparent energy',     3, False, 0x142, 3, 10., 0x122c, 2,  'VAh'),  
+  93  :  ('-kVAh∑-C_t1',  'kVAhSYS_C_T1_exp', 'System Exported Capacitive Apparent Energy, Tariff 1',  'System exported leading apparent energy',  'sys', False, 0x145, 3, 10., 0x122e, 2,  'VAh'),  
+  94  :  ('+kvarh1-L_t1', 'kvarh1_L_T1_imp',  'Phase 1 Imported Inductive Reactive Energy, Tariff 1',  'Phase 1 imported lagging reactive energy',     1, False, 0x148, 3, 10., 0x1230, 2, 'varh'),  
+  95  :  ('+kvarh2-L_t1', 'kvarh2_L_T1_imp',  'Phase 2 Imported Inductive Reactive Energy, Tariff 1',  'Phase 2 imported lagging reactive energy',     2, False, 0x14b, 3, 10., 0x1232, 2, 'varh'),  
+  96  :  ('+kvarh3-L_t1', 'kvarh3_L_T1_imp',  'Phase 3 Imported Inductive Reactive Energy, Tariff 1',  'Phase 3 imported lagging reactive energy',     3, False, 0x14e, 3, 10., 0x1234, 2, 'varh'),  
+  97  :  ('+kvarh∑-L_t1', 'kvarhSYS_L_T1_imp','System Imported Inductive Reactive Energy, Tariff 1',   'System imported lagging reactive energy',  'sys', False, 0x151, 3, 10., 0x1236, 2, 'varh'),  
+  98  :  ('-kvarh1-L_t1', 'kvarh1_L_T1_exp',  'Phase 1 Exported Inductive Reactive Energy, Tariff 1',  'Phase 1 exported lagging reactive energy',     1, False, 0x154, 3, 10., 0x1238, 2, 'varh'),  
+  99  :  ('-kvarh2-L_t1', 'kvarh2_L_T1_exp',  'Phase 2 Exported Inductive Reactive Energy, Tariff 1',  'Phase 2 exported lagging reactive energy',     2, False, 0x157, 3, 10., 0x123a, 2, 'varh'),  
+  100 :  ('-kvarh3-L_t1', 'kvarh3_L_T1_exp',  'Phase 3 Exported Inductive Reactive Energy, Tariff 1',  'Phase 3 exported lagging reactive energy',     3, False, 0x15a, 3, 10., 0x123c, 2, 'varh'),  
+  101 :  ('-kvarh∑-L_t1', 'kvarhSYS_L_T1_exp','System Exported Inductive Reactive Energy, Tariff 1',   'System exported lagging reactive energy',  'sys', False, 0x15d, 3, 10., 0x123e, 2, 'varh'),  
+  102 :  ('+kvarh1-C_t1', 'kvarh1_C_T1_imp',  'Phase 1 Imported Capacitive Reactive Energy, Tariff 1', 'Phase 1 imported leading reactive energy',     1, False, 0x160, 3, 10., 0x1240, 2, 'varh'),  
+  103 :  ('+kvarh2-C_t1', 'kvarh2_C_T1_imp',  'Phase 2 Imported Capacitive Reactive Energy, Tariff 1', 'Phase 2 imported leading reactive energy',     2, False, 0x163, 3, 10., 0x1242, 2, 'varh'),  
+  104 :  ('+kvarh3-C_t1', 'kvarh3_C_T1_imp',  'Phase 3 Imported Capacitive Reactive Energy, Tariff 1', 'Phase 3 imported leading reactive energy',     3, False, 0x166, 3, 10., 0x1244, 2, 'varh'),  
+  105 :  ('+kvarh∑-C_t1', 'kvarhSYS_C_T1_imp','System Imported Capacitive Reactive Energy, Tariff 1',  'System imported leading reactive energy',  'sys', False, 0x169, 3, 10., 0x1246, 2, 'varh'),  
+  106 :  ('-kvarh1-C_t1', 'kvarh1_C_T1_exp',  'Phase 1 Exported Capacitive Reactive Energy, Tariff 1', 'Phase 1 exported leading reactive energy',     1, False, 0x16c, 3, 10., 0x1248, 2, 'varh'),  
+  107 :  ('-kvarh2-C_t1', 'kvarh2_C_T1_exp',  'Phase 2 Exported Capacitive Reactive Energy, Tariff 1', 'Phase 2 exported leading reactive energy',     2, False, 0x16f, 3, 10., 0x124a, 2, 'varh'),  
+  108 :  ('-kvarh3-C_t1', 'kvarh3_C_T1_exp',  'Phase 3 Exported Capacitive Reactive Energy, Tariff 1', 'Phase 3 exported leading reactive energy',     3, False, 0x172, 3, 10., 0x124c, 2, 'varh'),  
+  109 :  ('-kvarh∑-C_t1', 'kvarhSYS_C_T1_exp','System Exported Capacitive Reactive Energy, Tariff 1',  'System exported leading reactive energy',  'sys', False, 0x175, 3, 10., 0x124e, 2, 'varh'),  
   # TARIFF 2: Counter Address + 0x0200
-
+  110 :  ('+kWh1_t2',     'kWh1_T2_imp',      'Phase 1 Imported Active Energy, Tariff 2',              'Phase 1 imported active energy',               1, False, 0x100, 3, 10., 0x1300, 2,   'Wh'),
+  111 :  ('+kWh2_t2',     'kWh2_T2_imp',      'Phase 2 Imported Active Energy, Tariff 2',              'Phase 2 imported active energy',               2, False, 0x103, 3, 10., 0x1302, 2,   'Wh'),  
+  112 :  ('+kWh3_t2',     'kWh3_T2_imp',      'Phase 3 Imported Active Energy, Tariff 2',              'Phase 3 imported active energy',               3, False, 0x106, 3, 10., 0x1304, 2,   'Wh'),  
+  113 :  ('+kWh∑_t2',     'kWhSYS_T2_imp',    'System Imported Active Energy, Tariff 2',               'System imported active energy',            'sys', False, 0x109, 3, 10., 0x1306, 2,   'Wh'),  
+  114 :  ('-kWh1_t2',     'kWh1_T2_exp',      'Phase 1 Exported Active Energy, Tariff 2',              'Phase 1 exported active energy',               1, False, 0x10c, 3, 10., 0x1308, 2,   'Wh'),  
+  115 :  ('-kWh2_t2',     'kWh2_T2_exp',      'Phase 2 Exported Active Energy, Tariff 2',              'Phase 2 exported active energy',               2, False, 0x10f, 3, 10., 0x130a, 2,   'Wh'),  
+  116 :  ('-kWh3_t2',     'kWh3_T2_exp',      'Phase 3 Exported Active Energy, Tariff 2',              'Phase 3 exported active energy',               3, False, 0x112, 3, 10., 0x130c, 2,   'Wh'),  
+  117 :  ('-kWh∑_t2',     'kWhSYS_T2_exp',    'System Exported Active Energy, Tariff 2',               'System exported active energy',            'sys', False, 0x115, 3, 10., 0x130e, 2,   'Wh'),  
+  118 :  ('+kVAh1-L_t2',  'kVAh1_L_T2_imp',   'Phase 1 Imported Inductive Apparent Energy, Tariff 2',  'Phase 1 imported lagging apparent energy',     1, False, 0x118, 3, 10., 0x1310, 2,  'VAh'),  
+  119 :  ('+kVAh2-L_t2',  'kVAh2_L_T2_imp',   'Phase 2 Imported Inductive Apparent Energy, Tariff 2',  'Phase 2 imported lagging apparent energy',     2, False, 0x11b, 3, 10., 0x1312, 2,  'VAh'),  
+  120 :  ('+kVAh3-L_t2',  'kVAh3_L_T2_imp',   'Phase 3 Imported Inductive Apparent Energy, Tariff 2',  'Phase 3 imported lagging apparent energy',     3, False, 0x11e, 3, 10., 0x1314, 2,  'VAh'),  
+  121 :  ('+kVAh∑-L_t2',  'kVAhSYS_L_T2_imp', 'System Imported Inductive Apparent Energy, Tariff 2',   'System imported lagging apparent energy',  'sys', False, 0x121, 3, 10., 0x1316, 2,  'VAh'),  
+  122 :  ('-kVAh1-L_t2',  'kVAh1_L_T2_exp',   'Phase 1 Exported Inductive Apparent Energy, Tariff 2',  'Phase 1 exported lagging apparent energy',     1, False, 0x124, 3, 10., 0x1318, 2,  'VAh'),  
+  123 :  ('-kVAh2-L_t2',  'kVAh2_L_T2_exp',   'Phase 2 Exported Inductive Apparent Energy, Tariff 2',  'Phase 2 exported lagging apparent energy',     2, False, 0x127, 3, 10., 0x131a, 2,  'VAh'),  
+  124 :  ('-kVAh3-L_t2',  'kVAh3_L_T2_exp',   'Phase 3 Exported Inductive Apparent Energy, Tariff 2',  'Phase 3 exported lagging apparent energy',     3, False, 0x12a, 3, 10., 0x131c, 2,  'VAh'),  
+  125 :  ('-kVAh∑-L_t2',  'kVAhSYS_L_T2_exp', 'System Exported Inductive Apparent Energy, Tariff 2',   'System exported lagging apparent energy',  'sys', False, 0x12d, 3, 10., 0x131e, 2,  'VAh'),  
+  126 :  ('+kVAh1-C_t2',  'kVAh1_C_T2_imp',   'Phase 1 Imported Capacitive Apparent Energy, Tariff 2', 'Phase 1 imported leading apparent energy',     1, False, 0x130, 3, 10., 0x1320, 2,  'VAh'),  
+  127 :  ('+kVAh2-C_t2',  'kVAh2_C_T2_imp',   'Phase 2 Imported Capacitive Apparent Energy, Tariff 2', 'Phase 2 imported leading apparent energy',     2, False, 0x133, 3, 10., 0x1322, 2,  'VAh'),  
+  128 :  ('+kVAh3-C_t2',  'kVAh3_C_T2_imp',   'Phase 3 Imported Capacitive Apparent Energy, Tariff 2', 'Phase 3 imported leading apparent energy',     3, False, 0x136, 3, 10., 0x1324, 2,  'VAh'),  
+  129 :  ('+kVAh∑-C_t2',  'kVAhSYS_C_T2_imp', 'System Imported Capacitive Apparent Energy, Tariff 2',  'System imported leading apparent energy',  'sys', False, 0x139, 3, 10., 0x1326, 2,  'VAh'),  
+  130 :  ('-kVAh1-C_t2',  'kVAh1_C_T2_exp',   'Phase 1 Exported Capacitive Apparent Energy, Tariff 2', 'Phase 1 exported leading apparent energy',     1, False, 0x13c, 3, 10., 0x1328, 2,  'VAh'),  
+  131 :  ('-kVAh2-C_t2',  'kVAh2_C_T2_exp',   'Phase 2 Exported Capacitive Apparent Energy, Tariff 2', 'Phase 2 exported leading apparent energy',     2, False, 0x13f, 3, 10., 0x132a, 2,  'VAh'),  
+  132 :  ('-kVAh3-C_t2',  'kVAh3_C_T2_exp',   'Phase 3 Exported Capacitive Apparent Energy, Tariff 2', 'Phase 3 exported leading apparent energy',     3, False, 0x142, 3, 10., 0x132c, 2,  'VAh'),  
+  133 :  ('-kVAh∑-C_t2',  'kVAhSYS_C_T2_exp', 'System Exported Capacitive Apparent Energy, Tariff 2',  'System exported leading apparent energy',  'sys', False, 0x145, 3, 10., 0x132e, 2,  'VAh'),  
+  134 :  ('+kvarh1-L_t2', 'kvarh1_L_T2_imp',  'Phase 1 Imported Inductive Reactive Energy, Tariff 2',  'Phase 1 imported lagging reactive energy',     1, False, 0x148, 3, 10., 0x1330, 2, 'varh'),  
+  135 :  ('+kvarh2-L_t2', 'kvarh2_L_T2_imp',  'Phase 2 Imported Inductive Reactive Energy, Tariff 2',  'Phase 2 imported lagging reactive energy',     2, False, 0x14b, 3, 10., 0x1332, 2, 'varh'),  
+  136 :  ('+kvarh3-L_t2', 'kvarh3_L_T2_imp',  'Phase 3 Imported Inductive Reactive Energy, Tariff 2',  'Phase 3 imported lagging reactive energy',     3, False, 0x14e, 3, 10., 0x1334, 2, 'varh'),  
+  137 :  ('+kvarh∑-L_t2', 'kvarhSYS_L_T2_imp','System Imported Inductive Reactive Energy, Tariff 2',   'System imported lagging reactive energy',  'sys', False, 0x151, 3, 10., 0x1336, 2, 'varh'),  
+  138 :  ('-kvarh1-L_t2', 'kvarh1_L_T2_exp',  'Phase 1 Exported Inductive Reactive Energy, Tariff 2',  'Phase 1 exported lagging reactive energy',     1, False, 0x154, 3, 10., 0x1338, 2, 'varh'),  
+  139 :  ('-kvarh2-L_t2', 'kvarh2_L_T2_exp',  'Phase 2 Exported Inductive Reactive Energy, Tariff 2',  'Phase 2 exported lagging reactive energy',     2, False, 0x157, 3, 10., 0x133a, 2, 'varh'),  
+  140 :  ('-kvarh3-L_t2', 'kvarh3_L_T2_exp',  'Phase 3 Exported Inductive Reactive Energy, Tariff 2',  'Phase 3 exported lagging reactive energy',     3, False, 0x15a, 3, 10., 0x133c, 2, 'varh'),  
+  141 :  ('-kvarh∑-L_t2', 'kvarhSYS_L_T2_exp','System Exported Inductive Reactive Energy, Tariff 2',   'System exported lagging reactive energy',  'sys', False, 0x15d, 3, 10., 0x133e, 2, 'varh'),  
+  142 :  ('+kvarh1-C_t2', 'kvarh1_C_T2_imp',  'Phase 1 Imported Capacitive Reactive Energy, Tariff 2', 'Phase 1 imported leading reactive energy',     1, False, 0x160, 3, 10., 0x1340, 2, 'varh'),  
+  143 :  ('+kvarh2-C_t2', 'kvarh2_C_T2_imp',  'Phase 2 Imported Capacitive Reactive Energy, Tariff 2', 'Phase 2 imported leading reactive energy',     2, False, 0x163, 3, 10., 0x1342, 2, 'varh'),  
+  144 :  ('+kvarh3-C_t2', 'kvarh3_C_T2_imp',  'Phase 3 Imported Capacitive Reactive Energy, Tariff 2', 'Phase 3 imported leading reactive energy',     3, False, 0x166, 3, 10., 0x1344, 2, 'varh'),  
+  145 :  ('+kvarh∑-C_t2', 'kvarhSYS_C_T2_imp','System Imported Capacitive Reactive Energy, Tariff 2',  'System imported leading reactive energy',  'sys', False, 0x169, 3, 10., 0x1346, 2, 'varh'),  
+  146 :  ('-kvarh1-C_t2', 'kvarh1_C_T2_exp',  'Phase 1 Exported Capacitive Reactive Energy, Tariff 2', 'Phase 1 exported leading reactive energy',     1, False, 0x16c, 3, 10., 0x1348, 2, 'varh'),  
+  147 :  ('-kvarh2-C_t2', 'kvarh2_C_T2_exp',  'Phase 2 Exported Capacitive Reactive Energy, Tariff 2', 'Phase 2 exported leading reactive energy',     2, False, 0x16f, 3, 10., 0x134a, 2, 'varh'),  
+  148 :  ('-kvarh3-C_t2', 'kvarh3_C_T2_exp',  'Phase 3 Exported Capacitive Reactive Energy, Tariff 2', 'Phase 3 exported leading reactive energy',     3, False, 0x172, 3, 10., 0x134c, 2, 'varh'),  
+  149 :  ('-kvarh∑-C_t2', 'kvarhSYS_C_T2_exp','System Exported Capacitive Reactive Energy, Tariff 2',  'System exported leading reactive energy',  'sys', False, 0x175, 3, 10., 0x134e, 2, 'varh'),  
   # PARTIAL_COUNTER_VALUES
-  '+kWh∑ PAR'     : ('System imported active energy',           'sys', False, 0x0400, 3, 10., 0x1400, 2,   'Wh'),
-  '-kWh∑ PAR'     : ('System exported active energy',           'sys', False, 0x0403, 3, 10., 0x1402, 2,   'Wh'),
-  '+kVAh∑-L PAR'  : ('System imported lagging apparent energy', 'sys', False, 0x0406, 3, 10., 0x1404, 2,  'VAh'),
-  '-kVAh∑-L PAR'  : ('System exported lagging apparent energy', 'sys', False, 0x0409, 3, 10., 0x1406, 2,  'VAh'),
-  '+kVAh∑-C PAR'  : ('System imported leading apparent energy', 'sys', False, 0x040C, 3, 10., 0x1408, 2,  'VAh'),
-  '-kVAh∑-C PAR'  : ('System exported leading apparent energy', 'sys', False, 0x040F, 3, 10., 0x140A, 2,  'VAh'),
-  '+kvarh∑-L PAR' : ('System imported lagging reactive energy', 'sys', False, 0x0412, 3, 10., 0x140C, 2, 'varh'),
-  '-kvarh∑-L PAR' : ('System exported lagging reactive energy', 'sys', False, 0x0415, 3, 10., 0x140E, 2, 'varh'),
-  '+kvarh∑-C PAR' : ('System imported leading reactive energy', 'sys', False, 0x0418, 3, 10., 0x1410, 2, 'varh'),
-  '-kvarh∑-C PAR' : ('System exported leading reactive energy', 'sys', False, 0x041B, 3, 10., 0x1412, 2, 'varh'),
-
+  150 :  ('+kWh∑_partial',     'kWhSYS_PAR_imp',    'System Imported Active Energy, Partial',              'System imported active energy',           'sys', False, 0x0400, 3, 10., 0x1400, 2,   'Wh'),
+  151 :  ('-kWh∑_partial',     'kWhSYS_PAR_exp',    'System Exported Active Energy, Partial',              'System exported active energy',           'sys', False, 0x0403, 3, 10., 0x1402, 2,   'Wh'),
+  152 :  ('+kVAh∑-L_partial',  'kVAhSYS_L_PAR_imp', 'System Imported Inductive Apparent Energy, Partial',  'System imported lagging apparent energy', 'sys', False, 0x0406, 3, 10., 0x1404, 2,  'VAh'),
+  153 :  ('-kVAh∑-L_partial',  'kVAhSYS_L_PAR_exp', 'System Exported Inductive Apparent Energy, Partial',  'System exported lagging apparent energy', 'sys', False, 0x0409, 3, 10., 0x1406, 2,  'VAh'),
+  154 :  ('+kVAh∑-C_partial',  'kVAhSYS_C_PAR_imp', 'System Imported Capacitive Apparent Energy, Partial', 'System imported leading apparent energy', 'sys', False, 0x040C, 3, 10., 0x1408, 2,  'VAh'),
+  155 :  ('-kVAh∑-C_partial',  'kVAhSYS_C_PAR_exp', 'System Exported Capacitive Apparent Energy, Partial', 'System exported leading apparent energy', 'sys', False, 0x040F, 3, 10., 0x140A, 2,  'VAh'),
+  156 :  ('+kvarh∑-L_partial', 'kvarhSYS_L_PAR_imp','System Imported Inductive Reactive Energy, Partial',  'System imported lagging reactive energy', 'sys', False, 0x0412, 3, 10., 0x140C, 2, 'varh'),
+  157 :  ('-kvarh∑-L_partial', 'kvarhSYS_L_PAR_exp','System Exported Inductive Reactive Energy, Partial',  'System exported lagging reactive energy', 'sys', False, 0x0415, 3, 10., 0x140E, 2, 'varh'),
+  158 :  ('+kvarh∑-C_partial', 'kvarhSYS_C_PAR_imp','System Imported Capacitive Reactive Energy, Partial', 'System imported leading reactive energy', 'sys', False, 0x0418, 3, 10., 0x1410, 2, 'varh'),
+  159 :  ('-kvarh∑-C_partial', 'kvarhSYS_C_PAR_exp','System Exported Capacitive Reactive Energy, Partial', 'System exported leading reactive energy', 'sys', False, 0x041B, 3, 10., 0x1412, 2, 'varh'),
   # BALANCE_VALUES
-  'kWh∑'     : ('System active energy',           'sys', True, 0x041E, 3, 10., 0x1414, 2,   'Wh'),
-  'kVAh∑-L'  : ('System lagging apparent energy', 'sys', True, 0x0421, 3, 10., 0x1416, 2,  'VAh'),
-  'kVAh∑-C'  : ('System leading apparent energy', 'sys', True, 0x0424, 3, 10., 0x1418, 2,  'VAh'),
-  'kvarh∑-L' : ('System lagging reactive energy', 'sys', True, 0x0427, 3, 10., 0x141A, 2, 'varh'),
-  'kvarh∑-C' : ('System leading reactive energy', 'sys', True, 0x042A, 3, 10., 0x141C, 2, 'varh'),
+  160 :  ('kWh∑',     'kWhSYS_BIL',    'System Active Energy, Balance',                     'System active energy',           'sys', True,  0x041E, 3, 10., 0x1414, 2,   'Wh'),
+  161 :  ('kVAh∑-L',  'kVAhSYS_L_BIL', 'System Inductive Apparent Energy, Balance',         'System lagging apparent energy', 'sys', True,  0x0421, 3, 10., 0x1416, 2,  'VAh'),
+  162 :  ('kVAh∑-C',  'kVAhSYS_C_BIL', 'System Capacitive Apparent Energy, Balance',        'System leading apparent energy', 'sys', True,  0x0424, 3, 10., 0x1418, 2,  'VAh'),
+  163 :  ('kvarh∑-L', 'kvarhSYS_L_BIL','System Inductive Reactive Energy, Balance',         'System lagging reactive energy', 'sys', True,  0x0427, 3, 10., 0x141A, 2, 'varh'),
+  164 :  ('kvarh∑-C', 'kvarhSYS_C_BIL','System Capacitive Reactive Energy, Balance',        'System leading reactive energy', 'sys', True,  0x042A, 3, 10., 0x141C, 2, 'varh'),
+  # COUNTER COMMUNICATION
+  165 :  ('at',       'ACTUAL_TARIFF_(EC)',   'Actual Tariff',                              '',                               'sys', False, 0x050B, 1, 1, None, None, None),
+  166 :  ('psv',      'PRI_S(EC)_VALUE_(EC)', 'Pri/Sec Value',                              '',                               'sys', False, 0x050C, 1, 1, None, None, None),
 }
 
-REAL_TIME_LIST = [
-  'V1', 'V2', 'V3', 'V12', 'V23', 'V31', 'V∑', 'A1', 'A2', 'A3', 'AN', 'A∑',
-  'PF1', 'PF2', 'PF3', 'PF∑', 'P1', 'P2', 'P3', 'P∑',
-  'S1', 'S2', 'S3', 'S∑', 'Q1', 'Q2', 'Q3', 'Q∑', 'F', 'Phase sequence',
-]
-COUNTER_LIST = [
-  '+kWh1',     '+kWh2',     '+kWh3',     '+kWh∑',     '-kWh1',     '-kWh2',     '-kWh3',     '-kWh∑',
-  '+kVAh1-L',  '+kVAh2-L',  '+kVAh3-L',  '+kVAh∑-L',  '-kVAh1-L',  '-kVAh2-L',  '-kVAh3-L',  '-kVAh∑-L',
-  '+kVAh1-C',  '+kVAh2-C',  '+kVAh3-C',  '+kVAh∑-C',  '-kVAh1-C',  '-kVAh2-C',  '-kVAh3-C',  '-kVAh∑-C',
-  '+kvarh1-L', '+kvarh2-L', '+kvarh3-L', '+kvarh∑-L', '-kvarh1-L', '-kvarh2-L', '-kvarh3-L', '-kvarh∑-L',
-  '+kvarh1-C', '+kvarh2-C', '+kvarh3-C', '+kvarh∑-C', '-kvarh1-C', '-kvarh2-C', '-kvarh3-C', '-kvarh∑-C'
-]
+RR_LIST = list(range(0, 167))
 
-PARTIAL_COUNTER_LIST = [
-  '+kWh∑ PAR',     '-kWh∑ PAR',
-  '+kVAh∑-L PAR',  '-kVAh∑-L PAR',  '+kVAh∑-C PAR',  '-kVAh∑-C PAR', 
-  '+kvarh∑-L PAR', '-kvarh∑-L PAR', '+kvarh∑-C PAR', '-kvarh∑-C PAR'
-]
+REAL_TIME_LIST = list(range(0, 30))
+#REAL_TIME_LIST = [
+#  'V1', 'V2', 'V3', 'V12', 'V23', 'V31', 'V∑', 'A1', 'A2', 'A3', 'AN', 'A∑',
+#  'PF1', 'PF2', 'PF3', 'PF∑', 'P1', 'P2', 'P3', 'P∑',
+#  'S1', 'S2', 'S3', 'S∑', 'Q1', 'Q2', 'Q3', 'Q∑', 'F', 'Phase sequence',
+#]
 
-BALANCE_LIST = ['kWh∑', 'kVAh∑-L', 'kVAh∑-C', 'kvarh∑-L', 'kvarh∑-C']
+COUNTER_LIST_TOTAL   = list(range(30, 70))
+#COUNTER_LIST = [
+#  '+kWh1',     '+kWh2',     '+kWh3',     '+kWh∑',     '-kWh1',     '-kWh2',     '-kWh3',     '-kWh∑',
+#  '+kVAh1-L',  '+kVAh2-L',  '+kVAh3-L',  '+kVAh∑-L',  '-kVAh1-L',  '-kVAh2-L',  '-kVAh3-L',  '-kVAh∑-L',
+#  '+kVAh1-C',  '+kVAh2-C',  '+kVAh3-C',  '+kVAh∑-C',  '-kVAh1-C',  '-kVAh2-C',  '-kVAh3-C',  '-kVAh∑-C',
+#  '+kvarh1-L', '+kvarh2-L', '+kvarh3-L', '+kvarh∑-L', '-kvarh1-L', '-kvarh2-L', '-kvarh3-L', '-kvarh∑-L',
+#  '+kvarh1-C', '+kvarh2-C', '+kvarh3-C', '+kvarh∑-C', '-kvarh1-C', '-kvarh2-C', '-kvarh3-C', '-kvarh∑-C'
+#]
+COUNTER_LIST_TARIFF1 = list(range(70, 110))
+COUNTER_LIST_TARIFF2 = list(range(110, 150))
+
+PARTIAL_COUNTER_LIST = list(range(150, 160))
+#PARTIAL_COUNTER_LIST = [
+#                                                                                                          
+#  '+kWh∑ PAR',     '-kWh∑ PAR',
+#  '+kVAh∑-L PAR',  '-kVAh∑-L PAR',  '+kVAh∑-C PAR',  '-kVAh∑-C PAR', 
+#  '+kvarh∑-L PAR', '-kvarh∑-L PAR', '+kvarh∑-C PAR', '-kvarh∑-C PAR'
+#]
+
+BALANCE_LIST = list(range(160, 165))
+#BALANCE_LIST = ['kWh∑', 'kVAh∑-L', 'kVAh∑-C', 'kvarh∑-L', 'kvarh∑-C']
 
 COUNTER_COMMUNICATION_DATA_RAW = {
-  'serial'     : ('Energy counter serial number',                       0x0500, 5, ),
-  'model'      : ('Energy counter model',                               0x0505, 1, ),
-  'type'       : ('Energy counter type',                                0x0506, 1, ),
-  'firmware'   : ('Energy counter firmware release',                    0x0507, 1, ),
-  'hardware'   : ('Energy counter hardware version',                    0x0508, 1, ),
-# '6'          : ('Reserved',                                           0x0509, 2, ),
-  'tariff'     : ('Tariff in use',                                      0x050B, 1, ),
-  'pri_sec'   : ('Primary/secondary value',                            0x050C, 1, ),
-  'error'      : ('Energy counter error code',                          0x050D, 1, ),
-# Ratio between the primary and secondary value of the current transformer:
-# 'ct'         : ('CT value (only for counter 6A 3phase model)',        0x050E, 1, ),
-# '11'         : ('Reserved',                                           0x050F, 2, ),
-  'fsa'        : ('Current full scale value (A)',                       0x0511, 1, ),
-  'wiring'     : ('Wiring mode',                                        0x0512, 1, ),
-# '14'         : ('MODBUS address (not available for MODBUS TCP)',      0x0513, 1, ),
-# '15'         : ('MODBUS mode (not available for MODBUS TCP)',         0x0514, 1, ),
-# '16'         : ('Communication speed (not available for MODBUS TCP)', 0x0515, 1, ),
-# '17'         : ('Reserved',                                           0x0516, 2, ),
-  'partial'  : ('Partial counters status',                            0x0517, 1, ),
-  'm_serial'   : ('Module serial number',                               0x0518, 5, ),
-  'svr'        : ('Signed value representation',                        0x051D, 1, ),
-# '21'         : ('Reserved',                                           0x051E, 1, ),
-  'm_firmware' : ('Module firmware release',                            0x051F, 1, ),
-  'm_hardware' : ('Module hardware version',                            0x0520, 1, ),
-# '24'         : ('Reserved',                                           0x0521, 2, ),
-# '25'         : ('Register set type',                                  0x0523, 1, ),
+  'mapping' :
+  {
+   'key'  : 'code',
+    0     : 'xml_name',
+    1     : 'descr',
+    2     : 'reg_int_start_addr',
+    3     : 'reg_int_num_words',
+  },
+  'serial'     : ('ec_serial', 'Energy counter serial number',                       0x0500, 5, ),
+  'model'      : ('model',     'Energy counter model',                               0x0505, 1, ),
+  'type'       : ('type',      'Energy counter type',                                0x0506, 1, ),
+  'firmware'   : ('fw',        'Energy counter firmware release',                    0x0507, 1, ),
+  'hardware'   : ('hw',        'Energy counter hardware version',                    0x0508, 1, ),
+ #'6'          : (None,        'Reserved',                                           0x0509, 2, ),
+  'tariff'     : (None,        'Tariff in use',                                      0x050B, 1, ),
+  'pri_sec'   :  (None,        'Primary/secondary value',                            0x050C, 1, ),
+  'error'      : (None,        'Energy counter error code',                          0x050D, 1, ),
+ #'ct'         : (None,        'ct_ratio', 'CT value (only for counter 6A 3phase model)',        0x050E, 1, ),
+ #'11'         : (None,        'Reserved',                                           0x050F, 2, ),
+  'fsa'        : ('fsa',       'Current full scale value (A)',                       0x0511, 1, ),
+  'wiring'     : ('wmode',     'Wiring mode',                                        0x0512, 1, ),
+ #'14'         : (None,        'MODBUS address (not available for MODBUS TCP)',      0x0513, 1, ),
+ #'15'         : (None,        'MODBUS mode (not available for MODBUS TCP)',         0x0514, 1, ),
+ #'16'         : (None,        'Communication speed (not available for MODBUS TCP)', 0x0515, 1, ),
+ #'17'         : (None,        'Reserved',                                           0x0516, 2, ),
+  'partial'    : (None,        'Partial counters status',                            0x0517, 1, ),
+  'm_serial'   : (None,        'Module serial number',                               0x0518, 5, ),
+ #'svr'        : (None,        'Signed value representation',                        0x051D, 1, ),
+ #'21'         : (None,        'Reserved',                                           0x051E, 1, ),
+  'm_firmware' : (None,        'Module firmware release',                            0x051F, 1, ),
+  'm_hardware' : (None,        'Module hardware version',                            0x0520, 1, ),
+ #'24'         : (None,        'Reserved',                                           0x0521, 2, ),
+ #'25'         : (None,        'Register set type',                                  0x0523, 1, ),
 }
+
+# XML element name in
+# http://192.168.178.253/cgi-bin/state?xml=1
+# status          1
+# status_str      Active
+# ec_serial       AB1OB00424
+# fw              01.02
+# hw              02.00
+# wmode           3Phase/4Wire-3CT
+# model           EC80A 3Phase 4Wire
+# type            MID
+# ct_ratio        1
+# err             -
+# fsa             80
+# 
+# oor0            0  (indicates no error)
+# ...
+# oor23           0
 
 COUNTER_COMMUNICATION_DATA_LIST = [
   'serial', 'model', 'type', 'firmware', 'hardware', 'tariff', 'pri_sec', 'error',
-  'fsa', 'wiring', 'partial', 'm_serial', 'svr', 'm_firmware', 'm_hardware',
+  'fsa', 'wiring', 'partial', 'm_serial', 'm_firmware', 'm_hardware',
 ]
 
+# for the coils:
+# http://192.168.178.253/cgi-bin/counters?xml=refresh_items
+# 
+# <root>
+#   <ustate>0</ustate>
+#   <cstate>1023</cstate>
+# </root>
+
 COILS_RAW = {
+  'mapping' :
+  {
+   'key'  : 'code',
+    0     : 'descr',
+  },
   # Byte 1 - voltage out of range
   'UV3' : ('Under Min Level Phase 3 Voltage',),
   'UV2' : ('Under Min Level Phase 2 Voltage',),
@@ -216,6 +367,25 @@ COILS_RAW = {
   'F'   : ('Frequency Out Of Range',),
 }
 
+# Limits/Thresholds triggering the COILS:
+# (Vnom = 3x230/400 V ... 3x240/415 V)
+#
+# * Phase Voltage:
+#   * UVL-n: Vnom -20%
+#   * OVL-n: Vnom +20%
+#
+# * Line Voltage:
+#   * UVL-L: Vnom * √3 -20%
+#   * OVL-L: Vnom * √3 +20%
+#
+# * Current:
+#   * UI: Start current value (Ist)
+#   * OI: Full scale value (FS)
+#
+# * Frequency:
+#   * F low: 45Hz
+#   * F high: 65Hz
+
 COILS_LIST = [
   'OV∑', 'OV1', 'OV2', 'OV3', 'UV∑', 'UV1', 'UV2', 'UV3',
   'OV12', 'OV23', 'OV31', 'UV12', 'UV23', 'UV31', 'RES', 'COM',
@@ -226,40 +396,31 @@ COILS_LIST = [
 
 def convert_registers(reg_dict):
     ret_dict = dict()
-    for reg_code in reg_dict:
-        tpl = reg_dict[reg_code] # tuple
+    mapping = reg_dict['mapping']
+    for key in reg_dict:
+        if key == 'mapping': continue
+        tpl = reg_dict[key] # tuple
         register = dict()
-        if len(tpl) == 9:
-            register = {
-              'code': reg_code,
-              'descr': tpl[0],
-              'related_to': tpl[1],
-              'sign': tpl[2],
-              'reg_int_start_addr': tpl[3],
-              'reg_int_num_words': tpl[4],
-              'reg_int_divisor': tpl[5],
-              'reg_ieee_start_addr': tpl[6],
-              'reg_ieee_num_words': tpl[7],
-              'unit': tpl[8],
-            }
-        if len(tpl) == 3:
-            register = {
-              'code': reg_code,
-              'descr': tpl[0],
-              'reg_int_start_addr': tpl[1],
-              'reg_int_num_words': tpl[2],
-            }
-        if len(tpl) == 1:
-            register = {
-              'code': reg_code,
-              'descr': tpl[0],
-            }
-        ret_dict[reg_code] = register
+        for m in mapping:
+            if type(m) == int:
+                register[mapping[m]] = tpl[m]
+            elif m == 'key':
+                register[mapping[m]] = key
+        ret_dict[key] = register
     return ret_dict
 
 RR = convert_registers(RR_RAW)
 COUNTER_COMMUNICATION_DATA = convert_registers(COUNTER_COMMUNICATION_DATA_RAW)
 COILS = convert_registers(COILS_RAW)
+
+class U180CException(NameError):
+    pass
+
+class U180CAuthException(NameError):
+    pass
+
+class U180CConnectionException(U180CException, pymodbus.exceptions.ConnectionException):
+    pass
 
 class U180C(object):
 
@@ -268,6 +429,13 @@ class U180C(object):
         self.port = port
         self.client = pymodbus.client.sync.ModbusTcpClient(host, port=502)
         self.client.connect()
+        self.set_properties()
+
+    def set_properties(self):
+        conf_vals = self.read_cc()
+        for conf, val in conf_vals:
+            if conf['code'] == 'serial':
+                self.serial = val
 
     def read_cc(self):
         ccd = COUNTER_COMMUNICATION_DATA
@@ -339,13 +507,21 @@ class U180C(object):
             ret_list.append( (rd, value) )
         return ret_list
 
-    def read_all_real_time(self):
+    @property
+    def real_time_measures(self):
         return self.read_ieee_registers(REAL_TIME_LIST)
 
-    def read_all_counter(self):
-        return self.read_ieee_registers(COUNTER_LIST)
+    def read_total_counters(self):
+        return self.read_ieee_registers(COUNTER_LIST_TOTAL)
 
-    def read_all_balance(self):
+    def read_tariff1_counters(self):
+        return self.read_ieee_registers(COUNTER_LIST_TARIFF1)
+
+    def read_tariff2_counters(self):
+        return self.read_ieee_registers(COUNTER_LIST_TARIFF2)
+
+    @property
+    def balance_measures(self):
         return self.read_ieee_registers(BALANCE_LIST)
 
     def read_coherent_block(self, register_list):
@@ -355,8 +531,8 @@ class U180C(object):
         assert len(rr.registers) == num_words
         ret_list = []
         pos = 0
-        for reg_code in RR_RT_ORDER:
-            reg = RR[reg_code]
+        for key in RR_RT_ORDER:
+            reg = RR[key]
             value = U180C.calculate_value_int_reg(reg, rr.registers[pos:pos+reg['reg_int_num_words']])
             pos += reg['reg_int_num_words']
             ret_list.append((reg, value))
@@ -395,6 +571,63 @@ class U180C(object):
             value = U180C.calculate_value_int_reg(rd, rr.registers[rel_addr:rel_addr+rd['reg_int_num_words']])
             ret_list.append((rd, value))
         return ret_list
+
+    def reset_counters(self, which='all counters'):
+        """ Will work only if your counter is resettable! """
+        which_map = {
+          'total counters': 0x0,
+          'tariff 1 counters': 0x1,
+          'tariff 2 counters': 0x2,
+          'all counters': 0x3
+        }
+        rr = self.client.write_registers(0x0516, [which_map[which]])
+        assert rr.function_code < 0x80, 'Error: returned function code is ' + hex(rr.function_code)
+
+    def start_partial_counters(self, which='all'):
+        self.write_partial_settings(which, 'start')
+
+    def stop_partial_counters(self, which='all'):
+        self.write_partial_settings(which, 'stop')
+
+    def reset_partial_counters(self, which='all'):
+        self.write_partial_settings(which, 'reset')
+
+    def write_partial_settings(self, which, action):
+        if type(which) in (list, tuple):
+            for pc in which:
+                self.write_partial_setting(pc, action)
+        elif which == 'all':
+            self.write_partial_setting(which, action)
+        else:
+            raise NameError('Using this function incorrectly with ' + which + ' as parameter.')
+
+    def start_partial_counter(self, which):
+        self.write_partial_setting(which, 'start')
+
+    def stop_partial_counter(self, which):
+        self.write_partial_setting(which, 'stop')
+
+    def reset_partial_counter(self, which):
+        self.write_partial_setting(which, 'reset')
+
+    def write_partial_setting(self, which, action):
+        which_map = {
+          '+kWh∑ PAR':     0x0, '-kWh∑ PAR':     0x1,
+          '+kVAh∑-L PAR':  0x2, '-kVAh∑-L PAR':  0x3,
+          '+kVAh∑-C PAR':  0x4, '-kVAh∑-C PAR':  0x5,
+          '+kvarh∑-L PAR': 0x6, '-kvarh∑-L PAR': 0x7,
+          '+kvarh∑-C PAR': 0x8, '-kvarh∑-C PAR': 0x9,
+          'all': 0xA
+        }
+        action_map = {
+          'start': 0x1,
+          'stop':  0x2,
+          'reset': 0x3,
+        }
+        byte1 = which_map[which]
+        byte2 = action_map[action]
+        rr = self.client.write_registers(0x0517, [byte1 << 8 | byte2])
+        assert rr.function_code < 0x80, 'Error: returned function code is ' + hex(rr.function_code)
 
     def calculate_value_int_reg(register_definition, register_values):
         rd = register_definition
@@ -451,12 +684,145 @@ class U180C(object):
 
     def close(self):
         self.client.close()
+try:
+    clock = time.perf_counter
+except AttributeError:
+    clock = time.time
+
+class U180CWeb(object):
+
+    MIN_INTERVAL = 5.
+
+    def __init__(self, host):
+        self.host = host
+        self.last = clock() - 100000
+        self._cookies = None
+        import requests
+        import xml.dom.minidom
+        self.requests = requests
+        self.minidom = xml.dom.minidom
+        self.authenticated = False
+        self.update_values(set_serial = True)
+
+    def update_values(self, set_serial=False):
+        if clock() - self.last < self.MIN_INTERVAL: return
+        self.last = clock()
+        r = self.http_get('{host}/tmp/index.readings.xml?{timestamp}'.format(host=self.host, timestamp=int(time.time())))
+        dom = self.minidom.parseString(r.text)
+        addr = dom.getElementsByTagName('readings')[0].firstChild.nodeValue
+        r = self.http_get('{host}/tmp/{addr}_readings.xml?{timestamp}'.format(host=self.host, addr=addr, timestamp=int(time.time())))
+        dom = self.minidom.parseString(r.text)
+        root = dom.firstChild
+        if set_serial:
+            self.serial = root.getElementsByTagName('sn')[0].firstChild.nodeValue
+        datet = root.getElementsByTagName('datet')[0].firstChild.nodeValue
+        da, ti = datet.split()
+        da = da.split('/')
+        ti = ti.split(':')
+        datet = [int(el) for el in reversed(da)] + [int(el) for el in ti]
+        datet = dt(*datet)
+        #import pdb; pdb.set_trace()
+        paracnt = root.getElementsByTagName('paracnt')[0].firstChild.nodeValue
+        sn = root.getElementsByTagName('sn')[0].firstChild.nodeValue
+        assert int(paracnt) == 167
+        ret_list = []
+        for key in RR_LIST:
+            rd = RR[key].copy()
+            val = root.getElementsByTagName('param'+str(rd['api_no']))[0].firstChild.nodeValue
+            ret_list.append((rd, val))
+        self._values = ret_list
+        return
+
+    @property
+    def total_counters(self):
+        self.update_values()
+        return [val for val in self._values if val[0]['api_no'] in COUNTER_LIST_TOTAL]
+
+    def read_all(self):
+        self.update_values()
+        return self._values
+
+    @property
+    def balance_measures(self):
+        self.update_values()
+        return [val for val in self._values if val[0]['api_no'] in BALANCE_LIST]
+
+    @property
+    def real_time_measures(self):
+        self.update_values()
+        return [val for val in self._values if val[0]['api_no'] in REAL_TIME_LIST]
+
+    def http_get(self, *args, **kwargs):
+        if self._cookies:
+            kwargs['cookies'] = self._cookies
+        return self.requests.get(*args, **kwargs)
+
+    def logout(self):
+        r = self.http_get('{host}/cgi-bin/index'.format(host=self.host))
+        if 'Logout' in r.text:
+            r = self.http_get('{host}/cgi-bin/index?logout=1'.format(host=self.host))
+            self.authenticated = False
+
+    def authenticate(self, username='admin', password='admin'):
+        r = self.http_get('{host}/cgi-bin/index'.format(host=self.host))
+        if 'Logout' in r.text:
+            self.authenticated = True
+            return True
+        data = {
+          'action': 'login',
+          'login': 'Login',
+          'password': password,
+          'user': username
+        }
+        r = self.requests.post('{host}/cgi-bin/index'.format(host=self.host), data=data)
+        if 'Logout' in r.text:
+            self.authenticated = True
+            self._cookies = r.cookies
+            return True
+        else:
+            return False
+
+    def read_coils(self):
+        if not self.authenticated: raise U180CAuthException('Need to authenticate before calling this function')
+        r = self.http_get('{host}/cgi-bin/counters?xml=refresh_items'.format(host=self.host))
+        # <root>
+        #   <ustate>0</ustate>
+        #   <cstate>1023</cstate>
+        # </root>
+        dom = self.minidom.parseString(r.text)
+        root = dom.firstChild
+        ustate = root.getElementsByTagName('ustate')[0].firstChild.nodeValue
+        cstate = root.getElementsByTagName('cstate')[0].firstChild.nodeValue
+        #import pdb; pdb.set_trace()
+        return []
+
+    def close(self):
+        self.logout()
+
+    def read_state(self):
+        if not self.authenticated: raise U180CAuthException('Need to authenticate before calling this function')
+        r = self.http_get('{host}/cgi-bin/state?xml=1'.format(host=self.host))
+        #import pdb; pdb.set_trace()
+        dom = self.minidom.parseString(r.text)
+        root = dom.firstChild
+
+def U180CFactory(connection_string):
+    cs = connection_string
+    if cs.startswith('http://'):
+        return U180CWeb(cs)
+    else:
+        return U180C(cs)
 
 def main():
-    parser = argparse.ArgumentParser(description='Talk to a Gossen U180C via Modbus TCP')
-    parser.add_argument('host', help='The Modbus TCP host to connect to')
-    parser.add_argument('--debug', help='Enable debugging output')
+    parser = argparse.ArgumentParser(description='Talk to a Gossen U180C via Modbus TCP or HTTP')
+    parser.add_argument('host', help="The U180C LAN Interface to connect to. State its IP address for MODBUS TCP or 'http://ip-or-host' for HTTP.")
+    parser.add_argument('measures', metavar='MEASURE', help='Measures to be logged. List all possible with --list.', nargs='*', default='all')
+    parser.add_argument('--debug', action='store_true', help='Enable debugging output')
     parser.add_argument('--filter', help="Filter output values. State 1,2,3 for phases or 'sys' for system.")
+    parser.add_argument('--list', action='store_true', help="List all possible measures.")
+    parser.add_argument('--style', choices=['csv', 'plain'], default='plain', help='The output style')
+    parser.add_argument('--username', default='admin', help='The HTTP username (if needed)')
+    parser.add_argument('--password', default='admin', help='The HTTP password (if needed)')
     args = parser.parse_args()
 
     if args.debug:
@@ -465,55 +831,105 @@ def main():
         log.setLevel(logging.DEBUG)
 
     try:
-        u180c = U180C(args.host)
-        cc = u180c.read_cc()
-        for conf_val in cc:
-            U180C.print_register(*conf_val)
-    except pymodbus.exceptions.ConnectionException:
+        u180c = U180CFactory(args.host)
+    except U180CException:
         parser.error('Could not connect to host ' + args.host)
 
-    coils = u180c.read_coils()
-    for coil_val in coils:
-        coil = coil_val[0]
-        value = coil_val[1]
-        if value:
-            print("Warning: Coil {code} ({descr}) is ON!".format(**coil))
-
     try:
-        while True:
-            regs_values = u180c.read_all_real_time()
-            for reg_value in regs_values:
-                if args.filter:
-                    reg_def = reg_value[0]
-                    if reg_def['related_to'] == args.filter:
-                        U180C.print_register(*reg_value)
-                else:
-                    U180C.print_register(*reg_value)
-            regs_values = u180c.read_all_counter()
-            for reg_value in regs_values:
-                if args.filter:
-                    reg_def = reg_value[0]
-                    if reg_def['related_to'] == args.filter:
-                        U180C.print_register(*reg_value)
-                else:
-                    U180C.print_register(*reg_value)
-            regs_values = u180c.read_all_balance()
-            for reg_value in regs_values:
-                if args.filter:
-                    reg_def = reg_value[0]
-                    if reg_def['related_to'] == args.filter:
-                        U180C.print_register(*reg_value)
-                else:
-                    U180C.print_register(*reg_value)
-            print(dt.now())
-            sys.stdout.flush()
-            time.sleep(5)
-    except KeyboardInterrupt:
-        sys.stderr.write('[Ctrl]-[c] pressed. Exiting...\n')
+        if type(u180c) is U180CWeb:
+            if not u180c.authenticate(args.username, args.password):
+                parser.error('Wrong username/password (Or, you need to logout the user in your Browser).')
 
-    import pdb; pdb.set_trace()
+        coils = u180c.read_coils()
+        for coil_val in coils:
+            coil = coil_val[0]
+            value = coil_val[1]
+            if value:
+                print("Warning: Coil {code} ({descr}) is ON!".format(**coil))
 
-    u180c.close()
+        #regs_values = u180c.balance_measures
+        #for reg_value in regs_values:
+        #    if args.filter:
+        #        reg_def = reg_value[0]
+        #        if reg_def['related_to'] == args.filter:
+        #            U180C.print_register(*reg_value)
+        #    else:
+        #        U180C.print_register(*reg_value)
+        #sys.stdout.flush()
+
+        styles = {
+          'plain' : {
+            'leading_cols': {'Date&Time': {} },
+            'sep' : ' '
+          },
+          'csv'   : {
+            'leading_cols': {'SN': {'code': 'serial'}, 'Date' : {}, 'Time': {} },
+            'sep' : ' '
+          },
+        }
+
+        if args.style == 'plain':
+            sep = ' '
+            measure_lists = [REAL_TIME_LIST, COUNTER_LIST_TOTAL, PARTIAL_COUNTER_LIST, BALANCE_LIST]
+            flat_measure_list = []
+            list(map(flat_measure_list.extend, measure_lists))
+        elif args.style == 'csv':
+            sep = ';'
+            flat_measure_list = RR_LIST
+        if args.list:
+            print("Possible measures:")
+            for measure in flat_measure_list:
+                print(measure)
+            sys.exit(0)
+
+        measures = []
+        if args.measures == 'all':
+            measures = flat_measure_list
+        else:
+            measures = []
+            for measure in args.measures:
+                try:
+                    measure = int(measure)
+                except:
+                    pass
+                if measure not in flat_measure_list:
+                    parser.error('Measure {} is unknown.'.format(measure))
+                measures.append(measure)
+
+        if args.style == 'csv':
+            print("Date&Time" + sep + sep.join([RR[m]['csv_code'] for m in measures]))
+        elif args.style == 'plain':
+            print("Date&Time" + sep + sep.join([RR[m]['code'] for m in measures]))
+        try:
+            while True:
+                readings = []
+                regs_values = u180c.total_counters #read_all()
+                for measure in measures:
+                    for reg_value in regs_values:
+                        reg_def = reg_value[0]
+                        if measure in (reg_def['api_no'], reg_def['code'], reg_def['csv_code']):
+                            readings.append(reg_value)
+                line = ""
+                line += dt.now().isoformat()
+                line += sep
+                line += sep.join([str(val) for rd, val in readings])
+                #for rd, val in readings:
+                #    if type(val) == float:
+                #        line += "{:.3f}".format(val)
+                #    else:
+                #        line += "{}".format(val)
+                #    line += sep
+                print(line)
+                sys.stdout.flush()
+                time.sleep(4.7)
+        except KeyboardInterrupt:
+            sys.stderr.write('[Ctrl]-[c] pressed. Exiting...\n')
+        except U180CException as e:
+            sys.stderr.write('A problem occured: {}\n'.format(e))
+
+    finally:
+        u180c.close()
 
 if __name__ == "__main__":
     main()
+
