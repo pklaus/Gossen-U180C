@@ -902,14 +902,15 @@ def main():
           },
         }
 
+        #flat_measure_list = RR_LIST
+        measure_lists = [REAL_TIME_LIST, COUNTER_LIST_TOTAL, COUNTER_LIST_TARIFF1, COUNTER_LIST_TARIFF2, PARTIAL_COUNTER_LIST, BALANCE_LIST]
+        flat_measure_list = []
+        list(map(flat_measure_list.extend, measure_lists))
         if args.style == 'plain':
             sep = ' '
-            measure_lists = [REAL_TIME_LIST, COUNTER_LIST_TOTAL, PARTIAL_COUNTER_LIST, BALANCE_LIST]
-            flat_measure_list = []
-            list(map(flat_measure_list.extend, measure_lists))
         elif args.style == 'csv':
             sep = ';'
-            flat_measure_list = RR_LIST
+
         if args.list:
             print("Possible measures:")
             for measure in flat_measure_list:
@@ -918,7 +919,7 @@ def main():
 
         measures = []
         if args.measures == 'all':
-            measures = flat_measure_list
+            measures = [RR[key] for key in flat_measure_list]
         else:
             measures = []
             for measure in args.measures:
