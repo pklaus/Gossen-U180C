@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+import pandas as pd
+from matplotlib import pyplot as plt
+from IPython import embed
+import numpy as np
+#import seaborn as sns
+#sns.set(palette="Set2")
+
+
+msg = """
+
+Finished reading in the file.
+-----------------------------
+
+The values are read into the Pandas DataFrame df.
+
+You can not plot values like this:
+
+    df.loc[:,['S1', 'Q1']].plot()
+    plt.show()
+
+Get a list of all available measures with this command:
+
+    " ".join(list(df.columns))
+
+You can do calculations with individual columns.
+Here, the absolute value of Q1 is written to the column abs_Q1:
+
+    df['abs_Q1'] = df.Q1.abs()
+
+If you want to thin out the dataframe, you can do it like this:
+
+    dfr = df.resample("5min", how='mean')
+    # how can be: min max median mean
+
+Calculate a rolling average with a window comprising 60 rows
+(equivalent to 5 minutes if 5 seconds is the sampling period).
+
+    pd.rolling_mean(df.P1, 60)
+
+Calculating an exponentially weighted moving average:
+
+    pd.ewma(df.P1, span=20)
+
+A nice plot:
+
+    dfr = df.loc[:,['P1', 'S1', 'Q1']].resample("5min", how=['min', 'max', 'mean'])
+    plt.plot(dfr.index, dfr.P1['mean'])
+    plt.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
+    plt.show()
+
+-----------------------------
+
+"""
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description='Analysis software for a U189A energy counter with U180C LAN interface.')
+    parser.add_argument('input_file', help='The data file to read')
+
+    args = parser.parse_args()
+
+    df = pd.io.parsers.read_csv(args.input_file, sep=';')
+
+    df['DateTime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'], format='%d/%m/%Y %H:%M:%S')
+    df.drop('Date', axis=1, inplace = True)
+    df.drop('Time', axis=1, inplace = True)
+    df.set_index('DateTime', inplace = True)
+
+
+    print(msg)
+    embed()
+
+if __name__ == "__main__":
+    main()
