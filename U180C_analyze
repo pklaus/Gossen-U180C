@@ -50,6 +50,20 @@ A nice plot:
     plt.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
     plt.show()
 
+How about an area plot for the actual power:
+
+    df.loc[:, ['P3', 'P1', 'P2']].plot(kind='area')
+
+Or a histogram for the abs() differences of the actual power from one measurement to the next:
+
+    df['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(1,1000), bins=999, log=True)
+    plt.show()
+
+or to look at every second row:
+
+    df[::2]['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(1,1000), bins=999, log=True)
+    plt.show()
+
 -----------------------------
 
 """
