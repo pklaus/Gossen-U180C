@@ -10,61 +10,63 @@ import numpy as np
 
 msg = """
 
-Finished reading in the file.
------------------------------
+A short HowTo for U180C_analyze
+-------------------------------
 
-The values are read into the Pandas DataFrame df.
+The values are read into a **[Pandas DataFrame][]** stored in the variable **`df`**.
 
-You can not plot values like this:
+[Pandas Dataframe]: http://pandas.pydata.org/pandas-docs/dev/generated/pandas.DataFrame.html
+
+Now, you can **plot measures** like this:
 
     df.loc[:,['S1', 'Q1']].plot()
     plt.show()
 
-Get a list of all available measures with this command:
+To get a **list of all available measures**, type:
 
-    " ".join(list(df.columns))
+    " ".join(df.columns)
 
-You can do calculations with individual columns.
+You can also **do calculations** with individual columns.
 Here, the absolute value of Q1 is written to the column abs_Q1:
 
     df['abs_Q1'] = df.Q1.abs()
 
-If you want to thin out the dataframe, you can do it like this:
+If you want to **thin out** (= resample) the dataframe, you can do it like this:
 
     dfr = df.resample("5min", how='mean')
     # how can be: min max median mean
 
-Calculate a rolling average with a window comprising 60 rows
+To calculate a **rolling average** with a window comprising 60 rows
 (equivalent to 5 minutes if 5 seconds is the sampling period).
 
     pd.rolling_mean(df.P1, 60)
 
-Calculating an exponentially weighted moving average:
+Calculating an **exponentially weighted moving average** is also easy:
 
     pd.ewma(df.P1, span=20)
 
-A nice plot:
+A nice plot - the actual power averaged over five minutes wrapped in its **min/max band**:
 
     dfr = df.loc[:,['P1', 'S1', 'Q1']].resample("5min", how=['min', 'max', 'mean'])
     plt.plot(dfr.index, dfr.P1['mean'])
     plt.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
     plt.show()
 
-How about an area plot for the actual power:
+How about an **area plot for the actual power** (after resampling to 5mins)
+(the plot is stacked automatically).
 
-    df.loc[:, ['P3', 'P1', 'P2']].plot(kind='area')
+    df.resample("5min", how='mean').loc[:, ['P3', 'P1', 'P2']].plot(kind='area')
 
-Or a histogram for the abs() differences of the actual power from one measurement to the next:
+Another way to look at the data is to check for changes in the power consumption.
+To do so, you can draw a **histogram for the absolute differences of the actual power from one measurement to the next**.
+This should allow to identify consumers with fixed power consumption at switching time:
 
     df['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(1,1000), bins=999, log=True)
-    plt.show()
-
-or to look at every second row:
-
+    # or check the difference between every second measurement:
     df[::2]['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(1,1000), bins=999, log=True)
     plt.show()
 
-Consumption per day:
+Also an important task is the calculation of the **energy consumed per day**:
 
     dfr = df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D", how=['min', 'max'])
     dfr /= 1000.
@@ -93,6 +95,7 @@ def main():
     df = pd.io.parsers.read_csv(args.input_file, sep=';', parse_dates=[['Date', 'Time']], dayfirst=True)
     df.set_index('Date_Time', inplace = True)
     df.drop('SN', axis=1, inplace = True)
+    print("Finished reading the data file in.")
 
     print(msg)
     try:
