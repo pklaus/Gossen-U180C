@@ -78,6 +78,7 @@ def main():
 
     df = pd.io.parsers.read_csv(args.input_file, sep=';', parse_dates=[['Date', 'Time']], dayfirst=True)
     df.set_index('Date_Time', inplace = True)
+    df.drop('SN', axis=1, inplace = True)
 
     print(msg)
     embed()
