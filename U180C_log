@@ -97,10 +97,15 @@ def main():
                 if not measure_found:
                     parser.error('Measure {} is unknown.'.format(measure))
 
+        date_format = []
+        headers = []
         if args.style == 'csv':
-            print("Date&Time" + sep + sep.join([m['csv_code'] for m in measures]))
+            headers = ["Date", "Time"] + [m['csv_code'] for m in measures]
+            date_format = ['%d/%m/%Y', '%H:%M:%S']
         elif args.style == 'plain':
-            print("Date&Time" + sep + sep.join([m['code'] for m in measures]))
+            headers = ["Date&Time"] + [m['code'] for m in measures]
+            date_format = ['%Y-%m-%dT%H:%M:%S']
+        print(sep.join(headers))
         try:
             while True:
                 readings = []
@@ -111,7 +116,7 @@ def main():
                         if measure == reg_def:
                             readings.append(reg_value)
                 line = ""
-                line += dt.now().isoformat()
+                line += sep.join([dt.now().strftime(df) for df in date_format])
                 line += sep
                 line += sep.join(['{:.3f}'.format(val) if type(val) == float else str(val) for rd, val in readings])
                 #for rd, val in readings:
