@@ -95,6 +95,19 @@ def main():
     df.drop('SN', axis=1, inplace = True)
 
     print(msg)
+    try:
+        import webbrowser
+        import tempfile
+        import markdown
+        fp = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False)
+        filename = fp.name
+        with fp:
+            fp.write(markdown.markdown(msg))
+            fp.close()
+        webbrowser.open_new_tab('file://' + filename)
+    except Exception as e:
+        print(str(e))
+
     embed()
 
 if __name__ == "__main__":
