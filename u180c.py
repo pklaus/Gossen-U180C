@@ -710,6 +710,7 @@ except AttributeError:
 class U180CWeb(object):
 
     MIN_INTERVAL = 5.
+    RETRIES = 3
 
     def __init__(self, host):
         self.host = host
@@ -725,11 +726,21 @@ class U180CWeb(object):
     def update_values(self, set_serial=False):
         if clock() - self.last < self.MIN_INTERVAL: return
         self.last = clock()
-        r = self.http_get('{host}/tmp/index.readings.xml?{timestamp}'.format(host=self.host, timestamp=int(time.time())))
-        dom = self.minidom.parseString(r.text)
-        addr = dom.getElementsByTagName('readings')[0].firstChild.nodeValue
-        r = self.http_get('{host}/tmp/{addr}_readings.xml?{timestamp}'.format(host=self.host, addr=addr, timestamp=int(time.time())))
-        dom = self.minidom.parseString(r.text)
+        tries = self.RETRIES
+        dom = None
+        while tries:
+            tries -= 1
+            try:
+                r = self.http_get('{host}/tmp/index.readings.xml?{timestamp}'.format(host=self.host, timestamp=int(time.time())))
+                dom = self.minidom.parseString(r.text)
+                addr = dom.getElementsByTagName('readings')[0].firstChild.nodeValue
+                r = self.http_get('{host}/tmp/{addr}_readings.xml?{timestamp}'.format(host=self.host, addr=addr, timestamp=int(time.time())))
+                dom = self.minidom.parseString(r.text)
+                break
+            except:
+                pass
+        if dom is None:
+            return False
         root = dom.firstChild
         if set_serial:
             self.serial = root.getElementsByTagName('sn')[0].firstChild.nodeValue
@@ -749,7 +760,7 @@ class U180CWeb(object):
             val = root.getElementsByTagName('param'+str(rd['api_no']))[0].firstChild.nodeValue
             ret_list.append((rd, val))
         self._values = ret_list
-        return
+        return True
 
     @property
     def counters_total(self):
