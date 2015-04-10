@@ -19,7 +19,7 @@ The values are read into a **[Pandas DataFrame][]** stored in the variable **`df
 
 Now, you can **plot measures** like this:
 
-    df.loc[:,['S1', 'Q1']].plot()
+    df.loc[:,['P1', 'P2', 'P3']].plot()
     plt.show()
 
 To get a **list of all available measures**, type:
@@ -27,9 +27,13 @@ To get a **list of all available measures**, type:
     " ".join(df.columns)
 
 You can also **do calculations** with individual columns.
-Here, the absolute value of Q1 is written to the column abs_Q1:
+Here, the absolute value of Q1 (the reactive power) is written to the column abs_Q1:
 
-    df['abs_Q1'] = df.Q1.abs()
+    phase = '1'
+    df['abs_Q'+phase] = df['Q'+phase].abs()
+    # plot it together with the actual and apparent power:
+    df.loc[:,['S'+phase, 'P'+phase, 'abs_Q'+phase]].plot()
+    plt.show()
 
 If you want to **thin out** (= resample) the dataframe, you can do it like this:
 
