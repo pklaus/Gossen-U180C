@@ -64,6 +64,20 @@ or to look at every second row:
     df[::2]['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(1,1000), bins=999, log=True)
     plt.show()
 
+Consumption per day:
+
+    dfr = df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D", how=['min', 'max'])
+    dfr /= 1000.
+    dfr['L1'] = dfr['kWh1_imp']['max'] - dfr['kWh1_imp']['min']
+    dfr['L2'] = dfr['kWh2_imp']['max'] - dfr['kWh2_imp']['min']
+    dfr['L3'] = dfr['kWh3_imp']['max'] - dfr['kWh3_imp']['min']
+    dfr.columns = dfr.columns.droplevel(level=1)
+    dfr = dfr.loc[:, ['L1', 'L2', 'L3']]
+    dfr['all'] = dfr.L1 + dfr.L2 + dfr.L3
+    ax = dfr.plot(title='energy used per day', lw=2,colormap='jet',marker='.',markersize=10)
+    ax.set_ylabel("kWh")
+    plt.show()
+
 -----------------------------
 
 """
