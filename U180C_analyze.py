@@ -236,12 +236,12 @@ def main():
         if 'kWh SYS_exp' in df.columns:
             df['kWhSYS_exp'] = df['kWh SYS_exp']
             df.drop('kWh SYS_exp', axis=1, inplace = True)
-        # divide columns with kW / kVA / kvar by 1000 to get the unit right:
-        relevant_fragments = ['kW', 'kVA', 'kvar']
-        relevant_fragments += [''.join(p) for p in product(['P', 'S', 'Q'], ['1', '2', '3', 'SYS'])]
-        for col in df.columns:
-            if any(x in col for x in relevant_fragments):
-                df[col] = df[col]/1000.
+        ## divide columns with kW / kVA / kvar by 1000 to get the unit right:
+        #relevant_fragments = ['kW', 'kVA', 'kvar']
+        #relevant_fragments += [''.join(p) for p in product(['P', 'S', 'Q'], ['1', '2', '3', 'SYS'])]
+        #for col in df.columns:
+        #    if any(x in col for x in relevant_fragments):
+        #        df[col] = df[col]/1000.
         # change all columns of type np.float64 to type np.float32:
         for column in df.columns:
             if df[column].dtype == np.float64:
