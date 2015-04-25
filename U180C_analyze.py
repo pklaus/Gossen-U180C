@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -217,10 +218,10 @@ def main():
             import webbrowser
             import tempfile
             import markdown
-            fp = tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False)
+            fp = tempfile.NamedTemporaryFile(mode='wb', suffix='.html', delete=False)
             filename = fp.name
             with fp:
-                fp.write(markdown.markdown(msg))
+                fp.write(markdown.markdown(msg).encode('utf-8'))
                 fp.close()
             webbrowser.open_new_tab('file://' + filename)
         except Exception as e:
