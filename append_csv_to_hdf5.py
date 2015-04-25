@@ -48,6 +48,7 @@ def main():
     print(basenames)
 
     for logfile in glob.glob(args.log_folder):
+        print("Checking {}".format(logfile))
         if os.path.basename(logfile) not in basenames:
             print("Adding the logfile {} to the HDF5 file.".format(logfile))
             added_logfiles = {'path': [], 'basename': [], 'dt': []}
