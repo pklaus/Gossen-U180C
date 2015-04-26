@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, pylab
+import matplotlib.dates as mdates
 from IPython import embed
 import numpy as np
 #import seaborn as sns
 #sns.set(palette="Set2")
 import sys
 from itertools import product
+from datetime import datetime as dt, timedelta, date
+import datetime
 
 
 msg = """
