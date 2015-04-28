@@ -108,7 +108,7 @@ This should allow to identify consumers with fixed power consumption at switchin
     df['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(0.001,1.), bins=999, log=True)
     
     # or check the difference between every second measurement:
-    df['P1'].diff(period=2).abs().hist(histtype='stepfilled', linewidth=0, range=(.001,1.), bins=999, log=True)
+    df['P1'].diff(periods=2).abs().hist(histtype='stepfilled', linewidth=0, range=(.001,1.), bins=999, log=True)
     plt.show()
     
     # or add the differences between subsequent, and higher periods together
