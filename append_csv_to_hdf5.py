@@ -45,7 +45,8 @@ def main():
         basenames = list(store.select('logfiles').basename)
     except KeyError:
         pass
-    print(basenames)
+    print("Log files already stored in the HDF5 file:")
+    print('\n'.join(basenames))
 
     for logfile in glob.glob(args.log_folder):
         print("Checking {}".format(logfile))
