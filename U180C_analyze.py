@@ -108,15 +108,15 @@ Another way to look at the data is to check for changes in the power consumption
 To do so, you can draw a **histogram for the absolute differences of the actual power from one measurement to the next**.
 This should allow to identify consumers with fixed power consumption at switching time:
 
-    df['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(0.001,1.), bins=999, log=True)
+    df['P1'].diff().abs().hist(histtype='stepfilled', linewidth=0, range=(1.,1000.), bins=999, log=True)
     
     # or check the difference between every second measurement:
-    df['P1'].diff(periods=2).abs().hist(histtype='stepfilled', linewidth=0, range=(.001,1.), bins=999, log=True)
+    df['P1'].diff(periods=2).abs().hist(histtype='stepfilled', linewidth=0, range=(1.,1000.), bins=999, log=True)
     plt.show()
     
     # or add the differences between subsequent, and higher periods together
     # and plot their histogram:
-    start_end = (.001, 1.)
+    start_end = (1., 1000.)
     nbins = 999
     data1 = df.ix[:,'P1'].diff(periods=1)
     data1 = data1.append(df.ix[:,'P1'].diff(periods=2))
