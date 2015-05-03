@@ -737,7 +737,7 @@ class U180CWeb(object):
                 r = self.http_get('{host}/tmp/{addr}_readings.xml?{timestamp}'.format(host=self.host, addr=addr, timestamp=int(time.time())))
                 dom = self.minidom.parseString(r.text)
                 break
-            except Exception e:
+            except Exception as e:
                 sys.stderr.write("{} - couldn't get readings. Error: {}\n".format(dt.now(), e))
         if dom is None:
             return False
