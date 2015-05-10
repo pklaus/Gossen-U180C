@@ -798,6 +798,11 @@ class U180CWeb(object):
         self.update_values()
         return [val for val in self._values if val[0]['code'] in REAL_TIME_LIST]
 
+    def http_post(self, *args, **kwargs):
+        if self._cookies:
+            kwargs['cookies'] = self._cookies
+        return self.requests.post(*args, **kwargs)
+
     def http_get(self, *args, **kwargs):
         if self._cookies:
             kwargs['cookies'] = self._cookies
@@ -809,9 +814,16 @@ class U180CWeb(object):
             r = self.http_get('{host}/cgi-bin/index?logout=1'.format(host=self.host))
             self.authenticated = False
 
-    def authenticate(self, username='admin', password='admin'):
+    def check_login(self):
         r = self.http_get('{host}/cgi-bin/index'.format(host=self.host))
         if 'Logout' in r.text:
+            return True
+        else:
+            return False
+
+    def authenticate(self, username='admin', password='admin'):
+        r = self.http_get('{host}/cgi-bin/index'.format(host=self.host))
+        if self.check_login():
             self.authenticated = True
             return True
         data = {
@@ -820,7 +832,7 @@ class U180CWeb(object):
           'password': password,
           'user': username
         }
-        r = self.requests.post('{host}/cgi-bin/index'.format(host=self.host), data=data)
+        r = self.http_post('{host}/cgi-bin/index'.format(host=self.host), data=data)
         if 'Logout' in r.text:
             self.authenticated = True
             self._cookies = r.cookies
@@ -851,6 +863,39 @@ class U180CWeb(object):
         #import pdb; pdb.set_trace()
         dom = self.minidom.parseString(r.text)
         root = dom.firstChild
+
+    def download_csv(self):
+        dt_str = dt.now().replace(microsecond=0).isoformat(sep='_').replace(':', '-')
+        local_filename = '{serial}_{dt_str}.csv'.format(serial=self.serial, dt_str=dt_str)
+        url = '{host}/cgi-bin/storage?action=download&id={serial}'.format(host=self.host, serial=self.serial)
+        r = self.requests.get(url, stream=True, cookies=self._cookies)
+        total_len = 0
+        yield local_filename
+        with open(local_filename, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024*64):
+                if chunk: # filter out keep-alive new chunks
+                    total_len += len(chunk)
+                    yield total_len
+                    f.write(chunk)
+                    f.flush()
+
+    def clear_csv(self):
+        url = '{host}/cgi-bin/storage?action=clear&id={serial}'.format(host=self.host, serial=self.serial)
+        r = self.http_get(url)
+
+    def enable_logging(self):
+        self.set_logging(True)
+
+    def disable_logging(self):
+        self.set_logging(False)
+
+    def set_logging(self, on=True):
+        url = '{host}/cgi-bin/storage?action=enable&id={serial}'.format(host=self.host, serial=self.serial)
+        if on:
+            r = self.http_post(url, data = {'selected': 'on'})
+        else:
+            r = self.http_post(url)
+
 
 def U180CFactory(connection_string):
     cs = connection_string
