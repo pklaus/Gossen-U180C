@@ -713,6 +713,7 @@ class U180CWeb(object):
     RETRIES = 3
 
     def __init__(self, host):
+        assert host.startswith('http')
         self.host = host
         self.last = clock() - 100000
         self._cookies = None
