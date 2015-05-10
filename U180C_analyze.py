@@ -27,7 +27,7 @@ def main():
 
     msg = ''
     script_path = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(script_path, 'ANALYSIS.md'), 'r') as f:
+    with open(os.path.join(script_path, 'ANALYSIS.md'), 'r', encoding='utf-8') as f:
         msg = f.read()
     if args.doc:
         try:
