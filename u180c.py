@@ -9,7 +9,7 @@ import struct
 
 
 # XML element name in
-# http://192.168.178.253/tmp/0_readings.xml?1428492576635
+# http://192.168.1.253/tmp/0_readings.xml?1428492576635
 # sn       AB1OB00413
 # paracnt  167
 # datet    8/4/2015 13:29:32
@@ -282,7 +282,7 @@ COUNTER_COMMUNICATION_DATA_RAW = {
 }
 
 # XML element name in
-# http://192.168.178.253/cgi-bin/state?xml=1
+# http://192.168.1.253/cgi-bin/state?xml=1
 # status          1
 # status_str      Active
 # ec_serial       AB1OB00424
@@ -305,7 +305,7 @@ COUNTER_COMMUNICATION_DATA_LIST = [
 ]
 
 # for the coils:
-# http://192.168.178.253/cgi-bin/counters?xml=refresh_items
+# http://192.168.1.253/cgi-bin/counters?xml=refresh_items
 # 
 # <root>
 #   <ustate>0</ustate>
