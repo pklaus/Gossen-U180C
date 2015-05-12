@@ -868,7 +868,7 @@ class U180CWeb(object):
         dt_str = dt.now().replace(microsecond=0).isoformat(sep='_').replace(':', '-')
         local_filename = '{serial}_{dt_str}.csv'.format(serial=self.serial, dt_str=dt_str)
         url = '{host}/cgi-bin/storage?action=download&id={serial}'.format(host=self.host, serial=self.serial)
-        r = self.requests.get(url, stream=True, cookies=self._cookies)
+        r = self.http_post(url, stream=True, cookies=self._cookies)
         total_len = 0
         yield local_filename
         with open(local_filename, 'wb') as f:
