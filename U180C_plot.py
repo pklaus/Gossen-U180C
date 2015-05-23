@@ -52,7 +52,8 @@ class U180CPlotService(object):
 
     def power_single_plot(self):
         """ Power of all phases over time. """
-        fig = plt.figure(num=None, figsize=(200, 6), dpi=200, facecolor='w', edgecolor='k')
+        number_of_days = self.number_of_days()
+        fig = plt.figure(num=None, figsize=(5*number_of_days, 6), dpi=200, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         self.df.ix[:,['P1','P2','P3']].plot(ax=ax)
         ax.xaxis.grid(True, which="minor")
