@@ -93,9 +93,19 @@ class U180CPlotService(object):
             ndays = (last_date - first_date).days + 1
             nbins = 400
             start_end = (0,4000)
+            first_dt = dt.combine(first_date, datetime.time(0))
+            last_dt = dt.combine(last_date+timedelta(days=1), datetime.time(0))
+            y_lims = (first_dt, last_dt)
+            y_lims = mdates.date2num(y_lims)
+            y_lims = list(y_lims)
+            y_lims = list(reversed(y_lims))
+            x_lims = [0, start_end[1]]
+            extent = x_lims + y_lims
             gd = day_diff_hists(self.df[measure], nbins, first_date, last_date, start_end=start_end)
             ld = np.log10(gd)
-            plt.imshow(ld, aspect=0.5*start_end[1]/ndays, extent=[0,start_end[1],0,ndays], interpolation='nearest')
+            fig, ax = plt.subplots()
+            ax.imshow(ld, aspect=0.5*start_end[1]/ndays, extent=extent, interpolation='nearest')
+            ax.yaxis_date()
             plt.title('Daily Power Diff Histograms for {}'.format(measure))
             plt.savefig(self.fn('histogram_each_day_{}.png'.format(measure)), bbox_inches='tight')
 
