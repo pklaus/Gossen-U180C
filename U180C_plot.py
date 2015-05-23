@@ -39,6 +39,7 @@ class U180CPlotService(object):
 
     def plot_all(self):
         """ We call all methods with a name that ends with _plot """
+        print("Now creating the following plots:")
         plot_methods = []
         for method in inspect.getmembers(self, predicate=inspect.ismethod):
             method_name = method[0]
@@ -46,7 +47,7 @@ class U180CPlotService(object):
                 plot_methods.append(method_name)
         for method_name in plot_methods:
             method = getattr(self, method_name)
-            print(method.__doc__)
+            print(' - {}() {}'.format(method_name, method.__doc__.strip()))
             method()
 
     def power_single_plot(self):
