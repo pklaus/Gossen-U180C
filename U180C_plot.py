@@ -16,8 +16,7 @@ import argparse
 import inspect
 
 # change the default plot size:
-#from pylab import rcParams
-#rcParams['figure.figsize'] = 5, 10
+pylab.rcParams['figure.figsize'] = 10, 6
 
 
 class U180CPlotService(object):
