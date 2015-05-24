@@ -178,6 +178,20 @@ class U180CPlotService(object):
             #cbar.set_label('Power consumption',size=18)
             plt.savefig(self.fn('power_over_the_day_{}.png'.format(measure)), bbox_inches='tight')
 
+    def energy_consumed_per_day_plot(self):
+        """ energy consumed (on each phase) per day """
+        dfr = self.df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D", how=['min', 'max'])
+        dfr['L1'] = dfr['kWh1_imp']['max'] - dfr['kWh1_imp']['min']
+        dfr['L2'] = dfr['kWh2_imp']['max'] - dfr['kWh2_imp']['min']
+        dfr['L3'] = dfr['kWh3_imp']['max'] - dfr['kWh3_imp']['min']
+        dfr.columns = dfr.columns.droplevel(level=1)
+        dfr = dfr.loc[:, ['L1', 'L2', 'L3']]
+        dfr /= 1000.
+        dfr['all'] = dfr.L1 + dfr.L2 + dfr.L3
+        ax = dfr.plot(title='energy used per day', lw=2,colormap='jet',marker='.',markersize=10)
+        ax.set_ylabel("kWh")
+        plt.savefig(self.fn('energy_consumed_per_day.png'), bbox_inches='tight')
+
     def fn(self, name):
         """ returns the full filename """
         return os.path.join(self.output_folder, name)
