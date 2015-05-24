@@ -60,6 +60,27 @@ class U180CPlotService(object):
         ax.xaxis.grid(True, which="major")
         plt.savefig(self.fn('power_over-time_P1_P2_P3.png'), bbox_inches='tight')
 
+    def five_min_avg_min_max_band_plot(self):
+        """ 5min avg and min-max-band plot """
+        dfr = self.df.loc[:,['P1', 'P2', 'P3', 'PSYS']].resample("5min", how=['min', 'max', 'mean'])
+        # for the phases individually:
+        number_of_days = self.number_of_days()
+        fig = plt.figure(num=None, figsize=(5*number_of_days, 6), dpi=200, facecolor='w', edgecolor='k')
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax.plot(dfr.index, dfr.P1['mean'])
+        ax.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
+        ax.plot(dfr.index, dfr.P2['mean'])
+        ax.fill_between(dfr.index, dfr.P2['min'],dfr.P2['max'],facecolor='g',alpha=0.5)
+        ax.plot(dfr.index, dfr.P3['mean'])
+        ax.fill_between(dfr.index, dfr.P3['min'],dfr.P3['max'],facecolor='r',alpha=0.5)
+        plt.savefig(self.fn('5m_avg_min-max-band_P1_P2_P3.png'), bbox_inches='tight')
+        # or for the sum of all phases:
+        fig = plt.figure(num=None, figsize=(5*number_of_days, 6), dpi=200, facecolor='w', edgecolor='k')
+        ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        ax.plot(dfr.index, dfr.PSYS['mean'])
+        ax.fill_between(dfr.index, dfr.PSYS['min'],dfr.PSYS['max'],facecolor='r',alpha=0.5)
+        plt.savefig(self.fn('5m_avg_min-max-band_PSYS.png'), bbox_inches='tight')
+
     def power_diff_histo_plot(self):
         """ Power differences of the different phases for each day (individual plots per phase). """
 
