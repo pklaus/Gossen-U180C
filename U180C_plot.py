@@ -42,8 +42,10 @@ class U180CPlotService(object):
         ndp = self.num_datapoints_daily()
         print("Dates with too many datapoints:")
         print(ndp[ndp > 17000])
+        print()
         print("Dates with an insufficent number of datapoints:")
         print(ndp[ndp < 16000])
+        print()
 
     def plot_all(self):
         """ We call all methods with a name that ends with _plot """
