@@ -169,6 +169,13 @@ class U180CPlotService(object):
             # ds: data series
             # returns a matrix with one power diff histogram per day
             ds = ds.resample('2min')
+            if ds.index[0].time() != datetime.time(0, 0):
+                # enlarging the DataFrame at the start of the data (to a full day)
+                ds.loc[dt.combine(ds.index[0].date(), datetime.time(0,0))] = float('nan')
+            if ds.index[-1].time() != datetime.time(0, 0):
+                # enlarging the DataFrame at the end of the data (to a full day)
+                ds.loc[dt.combine(ds.index[-1].date()+timedelta(days=1), datetime.time(0,0))] = float('nan')
+            ds = ds.resample('2min')
             gd = np.zeros([ndays, int(60*60*24/120)])
             i = 0
             while i < ndays:
