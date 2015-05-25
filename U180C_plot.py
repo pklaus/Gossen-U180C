@@ -222,9 +222,9 @@ class U180CPlotService(object):
         plt.figure()
         ax = ac_series.plot()
         ax.plot((ac_series.index.min(), ac_series.index.max()), (0,0), 'rD')
-        ax.set_ylabel('Accumulated consumption over linear average [kWh]')
+        ax.set_ylabel('Accumulated deviation from linearly interpolated consumed energy [kWh]')
         ax.set_xlabel('')
-        ax.text(0.95, 0.95, 'linear average consumption: {:.1f} kWh'.format(slope),
+        ax.text(0.95, 0.95, 'linearly averaged power: {:.1f} kWh/day = {:.0f} W'.format(slope, slope*1000/24),
              horizontalalignment='right',
              verticalalignment='center',
              transform = ax.transAxes)
