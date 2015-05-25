@@ -19,6 +19,28 @@ import inspect
 pylab.rcParams['figure.figsize'] = 10, 6
 
 
+def main():
+    parser = argparse.ArgumentParser(description='Analysis software for a U189A energy counter with U180C LAN interface.')
+    parser.add_argument('input_file', help='The data file to read')
+    parser.add_argument('output_folder', help='The folder to store the plots in')
+    parser.add_argument('plot_functions', nargs='*', help='The plot functions you want to run. [Default: all].')
+    args = parser.parse_args()
+
+    if not args.input_file.lower().endswith('.h5'):
+        parser.error('Expecting a HDF5 file as input (file ending .h5).')
+
+    store = pd.HDFStore(args.input_file, mode='r')
+    ups = U180CPlotService(store=store, output_folder=args.output_folder)
+    if not args.plot_functions:
+        print("Now creating all plots:")
+        ups.plot_all()
+    else:
+        print("Now creating the specified plots:")
+        for plot_function in args.plot_functions:
+            ups.plot_individual(plot_function)
+    store.close()
+
+
 DPI = 200
 
 class U180CPlotService(object):
@@ -319,27 +341,6 @@ class U180CPlotService(object):
     def number_of_days(self):
         min_max = self.min_max_date()
         return (min_max[1] - min_max[0]).days + 1
-
-def main():
-    parser = argparse.ArgumentParser(description='Analysis software for a U189A energy counter with U180C LAN interface.')
-    parser.add_argument('input_file', help='The data file to read')
-    parser.add_argument('output_folder', help='The folder to store the plots in')
-    parser.add_argument('plot_functions', nargs='*', help='The plot functions you want to run. [Default: all].')
-    args = parser.parse_args()
-
-    if not args.input_file.lower().endswith('.h5'):
-        parser.error('Expecting a HDF5 file as input (file ending .h5).')
-
-    store = pd.HDFStore(args.input_file, mode='r')
-    ups = U180CPlotService(store=store, output_folder=args.output_folder)
-    if not args.plot_functions:
-        print("Now creating all plots:")
-        ups.plot_all()
-    else:
-        print("Now creating the specified plots:")
-        for plot_function in args.plot_functions:
-            ups.plot_individual(plot_function)
-    store.close()
 
 if __name__ == "__main__":
     main()
