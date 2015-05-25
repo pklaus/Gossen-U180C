@@ -207,6 +207,12 @@ class U180CPlotService(object):
         dfr['L3'] = dfr['kWh3_imp']['max'] - dfr['kWh3_imp']['min']
         dfr.columns = dfr.columns.droplevel(level=1)
         dfr = dfr.loc[:, ['L1', 'L2', 'L3']]
+        complete_data = self.days_with_early_and_late_data()
+        for date_time in complete_data.index:
+            if not complete_data.ix[date_time]:
+                dfr.ix[date_time]['L1'] = float('nan')
+                dfr.ix[date_time]['L2'] = float('nan')
+                dfr.ix[date_time]['L3'] = float('nan')
         dfr /= 1000.
         dfr['all'] = dfr.L1 + dfr.L2 + dfr.L3
         ax = dfr.plot(title='energy used per day', lw=2,colormap='jet',marker='.',markersize=10)
