@@ -244,7 +244,8 @@ class U180CPlotService(object):
         y_range = y[1] - y[0]
         time_range = x[1] - x[0]
 
-        ac_series = dfr[colname] - y_range * ((dfr.Date_Time - dfr.Date_Time.min())/time_range)
+        dfr = dfr.set_index('Date_Time')
+        ac_series = dfr[colname] - y_range * ((dfr.index - dfr.index.min())/time_range)
         #ac_series -= dfr[colname][0]
         ac_series -= y[0]
         ac_series /= 1000.
