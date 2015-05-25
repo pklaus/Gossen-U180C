@@ -36,7 +36,12 @@ class U180CPlotService(object):
 
         print("Number of Days: {}".format(self.number_of_days()))
 
+        self.check_early_late_data()
         self.check_num_datapoints()
+
+    def check_early_late_data(self):
+        print(self.days_with_early_and_late_data())
+        print()
 
     def check_num_datapoints(self):
         ndp = self.num_datapoints_daily()
@@ -206,6 +211,19 @@ class U180CPlotService(object):
     def fn(self, name):
         """ returns the full filename """
         return os.path.join(self.output_folder, name)
+
+    def days_with_early_and_late_data(self, minutes_from_midnight = 10):
+        # minutes_from_midnight max value : 60
+        dweald = dict(Date_Time=[], early_late_data=[])
+        for grp, daydf in self.df.groupby(pd.TimeGrouper('D')):
+            dweald['Date_Time'].append(grp)
+            early_data = daydf.ix[daydf.index.indexer_between_time(datetime.time(0), datetime.time(0, minutes_from_midnight))]
+            late_data = daydf.ix[daydf.index.indexer_between_time(datetime.time(23, 60-minutes_from_midnight), datetime.time(23,55,59))]
+            if len(early_data) < 1 or len(late_data) < 1:
+                dweald['early_late_data'].append(False)
+            else:
+                dweald['early_late_data'].append(True)
+        return pd.DataFrame.from_dict(dweald).set_index('Date_Time')['early_late_data']
 
     def num_datapoints_daily(self):
         num_datapoints = dict(Date_Time=[], num_datapoints=[])
