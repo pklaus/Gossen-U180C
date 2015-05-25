@@ -199,6 +199,31 @@ class U180CPlotService(object):
             #cbar.set_label('Power consumption',size=18)
             plt.savefig(self.fn('power_over_the_day_{}.png'.format(measure)), bbox_inches='tight')
 
+    def total_energy_detrended_plot(self):
+        """ Plots the energy counter value of time with its overall linear trend removed """
+        def get_ac_component(df, colname):
+            col = df[colname]
+            df['Date_Time_tmp'] = df.index
+            y_range = col.max() - col.min()
+            time_range = df.Date_Time_tmp.max() - df.Date_Time_tmp.min()
+            ret_series = df[colname] - y_range * ((df.Date_Time_tmp - df.Date_Time_tmp.min())/time_range)
+            ret_series -= col.min()
+            ret_series /= 1000.
+            df.drop('Date_Time_tmp', axis=1)
+            slope = y_range / time_range.total_seconds() / 1000 * 24*3600
+            return (slope, ret_series)
+        
+        slope, ac_series = get_ac_component(self.df, 'kWhSYS_BIL')
+        plt.figure()
+        ax = ac_series.plot()
+        ax.set_ylabel('Accumulated consumption over linear average [kWh]')
+        ax.set_xlabel('')
+        ax.text(0.95, 0.95, 'linear average consumption: {:.1f} kWh'.format(slope),
+             horizontalalignment='right',
+             verticalalignment='center',
+             transform = ax.transAxes)
+        plt.savefig(self.fn('total_energy_detrended.png'), bbox_inches='tight')
+
     def energy_consumed_per_day_plot(self):
         """ energy consumed (on each phase) per day """
         dfr = self.df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D", how=['min', 'max'])
