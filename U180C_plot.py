@@ -67,7 +67,7 @@ class U180CPlotService(object):
 
     def plot_individual(self, method_name):
         method = getattr(self, method_name)
-        print(' ◆   {:40s}'.format(method_name+'()'), end='  ')
+        print(' -   {:40s}'.format(method_name+'()'), end='  ')
         docstring = method.__doc__
         if docstring:
             print(docstring.strip())
