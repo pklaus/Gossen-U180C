@@ -62,7 +62,12 @@ class U180CPlotService(object):
                 plot_methods.append(method_name)
         for method_name in plot_methods:
             method = getattr(self, method_name)
-            print(' - {}() {}'.format(method_name, method.__doc__.strip()))
+            print(' ◆   {:40s}'.format(method_name+'()'), end='  ')
+            docstring = method.__doc__
+            if docstring:
+                print(docstring.strip())
+            else:
+                print()
             method()
 
     def power_single_plot(self):
