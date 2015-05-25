@@ -49,7 +49,9 @@ def main():
     if args.input_file.lower().endswith('.csv'):
         df = pd.io.parsers.read_csv(args.input_file, sep=';', parse_dates=[['Date', 'Time']], dayfirst=True)
         df.set_index('Date_Time', inplace = True)
-        if 'SN' in df.columns: df.drop('SN', axis=1, inplace = True)
+        cols_to_drop = 'SN', 'ACTUAL_TARIFF_(EC)', 'PRI_S(EC)_VALUE_(EC)'
+        for col in cols_to_drop:
+            if col in df.columns: df.drop(col, axis=1, inplace = True)
         if 'kWh SYS_exp' in df.columns:
             df['kWhSYS_exp'] = df['kWh SYS_exp']
             df.drop('kWh SYS_exp', axis=1, inplace = True)
