@@ -206,28 +206,49 @@ class U180CPlotService(object):
 
     def total_energy_detrended_plot(self):
         """ Plots the energy counter value of time with its overall linear trend removed """
-        def get_ac_component(df, colname):
-            col = df[colname]
-            df['Date_Time_tmp'] = df.index
-            y_range = col.max() - col.min()
-            time_range = df.Date_Time_tmp.max() - df.Date_Time_tmp.min()
-            ret_series = df[colname] - y_range * ((df.Date_Time_tmp - df.Date_Time_tmp.min())/time_range)
-            ret_series -= col.min()
-            ret_series /= 1000.
-            df.drop('Date_Time_tmp', axis=1)
-            slope = y_range / time_range.total_seconds() / 1000 * 24*3600
-            return (slope, ret_series)
-        
-        slope, ac_series = get_ac_component(self.df, 'kWhSYS_BIL')
+
+        colname = 'kWhSYS_BIL'
+
+        col = self.df[colname]
+
+        # pip install statsmodels patsy
+        dfr = self.df[colname].resample('30min', how='mean')
+        #dfr /= 1000.
+        dfr = dfr.dropna()
+        dfr = dfr.reset_index()
+        #dfr.Date_Time.apply(lambda x: int(x.timestamp()))
+        x = dfr.Date_Time.astype(np.int64) // 10**9 # ns -> s
+        #x /= 3600. # s -> h
+        y = dfr[colname]
+        model = pd.ols(y=y, x=x)
+        x = x.values
+        x = (x[0], x[-1])
+        y = model.predict(x=pd.Series(x))
+        x = pd.to_datetime(x, unit='s')
+        #plt.plot(x, y)
+        y = y.values
+        ols_df = pd.Series(y, x)
+
+        y_range = y[1] - y[0]
+        time_range = x[1] - x[0]
+
+        ac_series = dfr[colname] - y_range * ((dfr.Date_Time - dfr.Date_Time.min())/time_range)
+        #ac_series -= dfr[colname][0]
+        ac_series -= y[0]
+        ac_series /= 1000.
+        slope = y_range / time_range.total_seconds() / 1000 * 24*3600
+
         plt.figure()
         ax = ac_series.plot()
-        ax.plot((ac_series.index.min(), ac_series.index.max()), (0,0), 'rD')
-        ax.set_ylabel('Accumulated deviation from linearly interpolated consumed energy [kWh]')
+        #ols_df.plot(ax=ax)
+        ax.plot((ac_series.index.min(), ac_series.index.max()), (0,0), 'r-')
+        ax.set_ylabel('Total energy consumed w/o linear trend [kWh]')
         ax.set_xlabel('')
-        ax.text(0.95, 0.95, 'linearly averaged power: {:.1f} kWh/day = {:.0f} W'.format(slope, slope*1000/24),
-             horizontalalignment='right',
-             verticalalignment='center',
-             transform = ax.transAxes)
+        kwargs = dict(horizontalalignment='center',verticalalignment='center',transform = ax.transAxes)
+        linear_trend_msg = 'Linear trend (average power): {:.1f} kWh/day = {:.0f} W'.format(slope, slope*1000/24)
+        ax.text(0.5, 0.15, linear_trend_msg, **kwargs)
+        ax.text(0.5, 0.10, 'Positive slope:   over  avg consumption', **kwargs)
+        ax.text(0.5, 0.05, 'Negative slope: under avg consumption', **kwargs)
         plt.savefig(self.fn('total_energy_detrended.png'), bbox_inches='tight')
 
     def energy_consumed_per_day_plot(self):
