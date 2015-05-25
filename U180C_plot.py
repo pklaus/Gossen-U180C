@@ -36,6 +36,15 @@ class U180CPlotService(object):
 
         print("Number of Days: {}".format(self.number_of_days()))
 
+        self.check_num_datapoints()
+
+    def check_num_datapoints(self):
+        ndp = self.num_datapoints_daily()
+        print("Dates with too many datapoints:")
+        print(ndp[ndp > 17000])
+        print("Dates with an insufficent number of datapoints:")
+        print(ndp[ndp < 16000])
+
     def plot_all(self):
         """ We call all methods with a name that ends with _plot """
         print("Now creating the following plots:")
@@ -195,6 +204,13 @@ class U180CPlotService(object):
     def fn(self, name):
         """ returns the full filename """
         return os.path.join(self.output_folder, name)
+
+    def num_datapoints_daily(self):
+        num_datapoints = dict(Date_Time=[], num_datapoints=[])
+        for grp, daydf in self.df.groupby(pd.TimeGrouper('D')):
+            num_datapoints['Date_Time'].append(grp)
+            num_datapoints['num_datapoints'].append(len(daydf))
+        return pd.DataFrame.from_dict(num_datapoints).set_index('Date_Time')['num_datapoints']
 
     def min_max_timestamp(self):
         return self.df.index.min(), self.df.index.max()
