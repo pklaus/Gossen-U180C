@@ -54,21 +54,26 @@ class U180CPlotService(object):
 
     def plot_all(self):
         """ We call all methods with a name that ends with _plot """
-        print("Now creating the following plots:")
+        for method_name in self.available_plots():
+            self.plot_individual(method_name)
+
+    def available_plots(self):
         plot_methods = []
         for method in inspect.getmembers(self, predicate=inspect.ismethod):
             method_name = method[0]
             if method_name.endswith('_plot'):
                 plot_methods.append(method_name)
-        for method_name in plot_methods:
-            method = getattr(self, method_name)
-            print(' ◆   {:40s}'.format(method_name+'()'), end='  ')
-            docstring = method.__doc__
-            if docstring:
-                print(docstring.strip())
-            else:
-                print()
-            method()
+        return plot_methods
+
+    def plot_individual(self, method_name):
+        method = getattr(self, method_name)
+        print(' ◆   {:40s}'.format(method_name+'()'), end='  ')
+        docstring = method.__doc__
+        if docstring:
+            print(docstring.strip())
+        else:
+            print()
+        method()
 
     def power_single_plot(self):
         """ Power of all phases over time. """
@@ -284,6 +289,7 @@ def main():
     parser = argparse.ArgumentParser(description='Analysis software for a U189A energy counter with U180C LAN interface.')
     parser.add_argument('input_file', help='The data file to read')
     parser.add_argument('output_folder', help='The folder to store the plots in')
+    parser.add_argument('plot_functions', nargs='*', help='The plot functions you want to run. [Default: all].')
     args = parser.parse_args()
 
     if not args.input_file.lower().endswith('.h5'):
@@ -291,7 +297,13 @@ def main():
 
     store = pd.HDFStore(args.input_file, mode='r')
     ups = U180CPlotService(store=store, output_folder=args.output_folder)
-    ups.plot_all()
+    if not args.plot_functions:
+        print("Now creating all plots:")
+        ups.plot_all()
+    else:
+        print("Now creating the specified plots:")
+        for plot_function in args.plot_functions:
+            ups.plot_individual(plot_function)
     store.close()
 
 if __name__ == "__main__":
