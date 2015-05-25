@@ -19,6 +19,8 @@ import inspect
 pylab.rcParams['figure.figsize'] = 10, 6
 
 
+DPI = 200
+
 class U180CPlotService(object):
 
     def __init__(self, store, output_folder):
@@ -78,7 +80,8 @@ class U180CPlotService(object):
     def power_single_plot(self):
         """ Power of all phases over time. """
         number_of_days = self.number_of_days()
-        fig = plt.figure(num=None, figsize=(5*number_of_days, 6), dpi=200, facecolor='w', edgecolor='k')
+        figsize = (min(5*number_of_days, 30000/DPI), 6)
+        fig = plt.figure(num=None, figsize=figsize, dpi=DPI, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
         self.df.ix[:,['P1','P2','P3']].plot(ax=ax)
         ax.xaxis.grid(True, which="minor")
@@ -90,7 +93,8 @@ class U180CPlotService(object):
         dfr = self.df.loc[:,['P1', 'P2', 'P3', 'PSYS']].resample("5min", how=['min', 'max', 'mean'])
         # for the phases individually:
         number_of_days = self.number_of_days()
-        fig = plt.figure(num=None, figsize=(5*number_of_days, 6), dpi=200, facecolor='w', edgecolor='k')
+        figsize = (min(5*number_of_days, 30000/DPI), 6)
+        fig = plt.figure(num=None, figsize=figsize, dpi=DPI, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
         ax.plot(dfr.index, dfr.P1['mean'])
         ax.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
@@ -100,7 +104,8 @@ class U180CPlotService(object):
         ax.fill_between(dfr.index, dfr.P3['min'],dfr.P3['max'],facecolor='r',alpha=0.5)
         plt.savefig(self.fn('5m_avg_min-max-band_P1_P2_P3.png'), bbox_inches='tight')
         # or for the sum of all phases:
-        fig = plt.figure(num=None, figsize=(5*number_of_days, 6), dpi=200, facecolor='w', edgecolor='k')
+        figsize = (min(5*number_of_days, 30000/DPI), 6)
+        fig = plt.figure(num=None, figsize=figsize, dpi=DPI, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
         ax.plot(dfr.index, dfr.PSYS['mean'])
         ax.fill_between(dfr.index, dfr.PSYS['min'],dfr.PSYS['max'],facecolor='r',alpha=0.5)
