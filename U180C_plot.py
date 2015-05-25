@@ -221,6 +221,7 @@ class U180CPlotService(object):
         slope, ac_series = get_ac_component(self.df, 'kWhSYS_BIL')
         plt.figure()
         ax = ac_series.plot()
+        ax.plot((ac_series.index.min(), ac_series.index.max()), (0,0), 'rD')
         ax.set_ylabel('Accumulated consumption over linear average [kWh]')
         ax.set_xlabel('')
         ax.text(0.95, 0.95, 'linear average consumption: {:.1f} kWh'.format(slope),
