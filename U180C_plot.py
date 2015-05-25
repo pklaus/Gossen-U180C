@@ -281,7 +281,7 @@ class U180CPlotService(object):
         ax.set_xlabel('')
         kwargs = dict(horizontalalignment='center',verticalalignment='center',transform = ax.transAxes)
         linear_trend_msg = 'Linear trend (average power): {:.1f} kWh/day = {:.0f} W'.format(slope, slope*1000/24)
-        ax.text(0.5, 0.15, linear_trend_msg, **kwargs)
+        ax.text(0.5, 0.18, linear_trend_msg, **kwargs)
         ax.text(0.5, 0.10, 'Positive slope:   over  avg consumption', **kwargs)
         ax.text(0.5, 0.05, 'Negative slope: under avg consumption', **kwargs)
         plt.savefig(self.fn('total_energy_detrended.png'), bbox_inches='tight')
