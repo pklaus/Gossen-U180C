@@ -25,11 +25,11 @@ def main():
 
     args = parser.parse_args()
 
-    msg = ''
-    script_path = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(script_path, 'ANALYSIS.md'), 'r', encoding='utf-8') as f:
-        msg = f.read()
     if args.doc:
+        msg = ''
+        script_path = os.path.dirname(os.path.realpath(__file__))
+        with open(os.path.join(script_path, 'ANALYSIS.md'), 'r', encoding='utf-8') as f:
+            msg = f.read()
         try:
             import webbrowser
             import tempfile
@@ -42,6 +42,7 @@ def main():
             webbrowser.open_new_tab('file://' + filename)
         except Exception as e:
             print(str(e))
+        print(msg)
         sys.exit(0)
 
     if not args.input_file: parser.error('Please state an input file to read from.')
@@ -81,8 +82,6 @@ def main():
         if args.output_file.lower().endswith('.h5'):
             # For appending, we should probably check for duplicates first?!
             df.to_hdf(args.output_file, 'df', format='table', append=args.append, complib='zlib', data_columns=True)
-
-    print(msg)
 
     embed()
 
