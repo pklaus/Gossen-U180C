@@ -109,8 +109,6 @@ class U180CPlotService(object):
         self.df.ix[:,['P1','P2','P3']].plot(ax=ax)
         start, end = ax.get_xlim()
         ax.xaxis.set_ticks(np.arange(start, end, 1.0))
-        ax.xaxis.grid(True, which="minor")
-        ax.xaxis.grid(True, which="major")
         plt.savefig(self.fn('power_over-time_P1_P2_P3.png'), bbox_inches='tight')
 
     def five_min_avg_min_max_band_plot(self):
