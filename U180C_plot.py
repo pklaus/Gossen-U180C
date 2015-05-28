@@ -4,6 +4,7 @@
 import pandas as pd
 from matplotlib import pyplot as plt, pylab
 import matplotlib.dates as mdates
+from matplotlib.dates import DateFormatter
 import numpy as np
 #import seaborn as sns
 #sns.set(palette="Set2")
@@ -120,19 +121,35 @@ class U180CPlotService(object):
         figsize = (min(5*number_of_days, 30000/self.DPI), 6)
         fig = plt.figure(num=None, figsize=figsize, dpi=self.DPI, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        locs, labels = plt.xticks()
+        plt.setp(labels, rotation=20, horizontalalignment='right')
+        formatter = DateFormatter('%b %d %Y')
+        ax.xaxis.set_major_formatter(formatter)  
         ax.plot(dfr.index, dfr.P1['mean'])
         ax.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
         ax.plot(dfr.index, dfr.P2['mean'])
         ax.fill_between(dfr.index, dfr.P2['min'],dfr.P2['max'],facecolor='g',alpha=0.5)
         ax.plot(dfr.index, dfr.P3['mean'])
         ax.fill_between(dfr.index, dfr.P3['min'],dfr.P3['max'],facecolor='r',alpha=0.5)
+        start, end = ax.get_xlim()
+        ax.xaxis.set_ticks(np.arange(start, end, 1.0))
+        ax.xaxis.grid(True, which="major")
+        ax.yaxis.grid(True, which="major")
         plt.savefig(self.fn('5m_avg_min-max-band_P1_P2_P3.png'), bbox_inches='tight')
         # or for the sum of all phases:
         figsize = (min(5*number_of_days, 30000/self.DPI), 6)
         fig = plt.figure(num=None, figsize=figsize, dpi=self.DPI, facecolor='w', edgecolor='k')
         ax = fig.add_axes([0.05, 0.05, 0.9, 0.9])
+        locs, labels = plt.xticks()
+        plt.setp(labels, rotation=20, horizontalalignment='right')
+        formatter = DateFormatter('%b %d %Y')
+        ax.xaxis.set_major_formatter(formatter)  
         ax.plot(dfr.index, dfr.PSYS['mean'])
         ax.fill_between(dfr.index, dfr.PSYS['min'],dfr.PSYS['max'],facecolor='r',alpha=0.5)
+        start, end = ax.get_xlim()
+        ax.xaxis.set_ticks(np.arange(start, end, 1.0))
+        ax.xaxis.grid(True, which="major")
+        ax.yaxis.grid(True, which="major")
         plt.savefig(self.fn('5m_avg_min-max-band_PSYS.png'), bbox_inches='tight')
 
     def power_diff_histo_plot(self):
