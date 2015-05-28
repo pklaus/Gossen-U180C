@@ -65,7 +65,7 @@ def main():
             #store.append('df', df, format='t', complib=None, data_columns=True)
             logfiles = pd.DataFrame.from_dict(added_logfiles)
             logfiles.set_index('dt', drop=True, inplace=True)
-            store.append('logfiles', logfiles, format='t', append=True)
+            store.append('logfiles', logfiles, format='t', append=True, min_itemsize=200)
     store.close()
 
     ## Calculate unique dates from the timestamp index column:
