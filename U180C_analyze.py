@@ -14,6 +14,16 @@ from datetime import datetime as dt, timedelta, date
 import datetime
 import os
 
+from append_csv_to_hdf5 import read_csv
+
+def read_data_file(csv_or_h5_filename):
+    lower_filename = csv_or_h5_filename.lower()
+    if lower_filename.endswith('.csv'):
+        return read_csv(csv_or_h5_filename)
+    if lower_filename.endswith('.h5'):
+        return pd.read_hdf(csv_or_h5_filename, 'df')
+        #return read_hdf(csv_or_h5_filename, 'df', where = ['index>2'])
+
 def main():
     import argparse
 
@@ -47,41 +57,14 @@ def main():
 
     if not args.input_file: parser.error('Please state an input file to read from.')
 
-    if args.input_file.lower().endswith('.csv'):
-        df = pd.io.parsers.read_csv(args.input_file, sep=';', parse_dates=[['Date', 'Time']], dayfirst=True)
-        df.set_index('Date_Time', inplace = True)
-        cols_to_drop = 'SN', 'ACTUAL_TARIFF_(EC)', 'PRI_S(EC)_VALUE_(EC)'
-        for col in cols_to_drop:
-            if col in df.columns: df.drop(col, axis=1, inplace = True)
-        if 'kWh SYS_exp' in df.columns:
-            df['kWhSYS_exp'] = df['kWh SYS_exp']
-            df.drop('kWh SYS_exp', axis=1, inplace = True)
-        ## divide columns with kW / kVA / kvar by 1000 to get the unit right:
-        #relevant_fragments = ['kW', 'kVA', 'kvar']
-        #relevant_fragments += [''.join(p) for p in product(['P', 'S', 'Q'], ['1', '2', '3', 'SYS'])]
-        #for col in df.columns:
-        #    if any(x in col for x in relevant_fragments):
-        #        df[col] = df[col]/1000.
-        # change all columns of type np.float64 to type np.float32:
-        for column in df.columns:
-            if df[column].dtype == np.float64:
-                df[column] = df[column].astype(np.float32)
-        print("Finished reading the data file in.")
-
-    if args.input_file.lower().endswith('.h5'):
-        #df = read_hdf(args.input_file., 'table', where = ['index>2'])
-        df = pd.read_hdf(args.input_file, 'df')
-
-        #store = pd.HDFStore(args.input_file, mode='r')
-        #for chunk in read_csv('file.csv', chunksize=50000):
-        #         store.append('df',chunk)
-        #store.close()
-        print("Finished saving the data to HDF5.")
+    df = read_data_file(args.input_file)
+    print("Finished reading the data file in.")
 
     if args.output_file:
         if args.output_file.lower().endswith('.h5'):
             # For appending, we should probably check for duplicates first?!
             df.to_hdf(args.output_file, 'df', format='table', append=args.append, complib='zlib', data_columns=True)
+            print("Finished storing the output file.")
 
     embed()
 
