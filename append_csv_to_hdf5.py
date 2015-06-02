@@ -47,11 +47,13 @@ def main():
         basenames = list(store.select('logfiles').basename)
     except KeyError:
         pass
-    print("Log files already stored in the HDF5 file:")
-    print('\n'.join(basenames))
+    print("\nLog files already stored in the HDF5 file:")
+    print('\n'.join(basenames)+'\n')
 
-    for logfile in glob.glob(args.log_folder):
-        print("Checking {}".format(logfile))
+    files_to_check = glob.glob(args.log_folder)
+    print("Checking {} file(s) to be appended:".format(len(files_to_check)))
+    print('\n'.join(files_to_check) + '\n')
+    for logfile in files_to_check:
         if os.path.basename(logfile) not in basenames:
             print("Adding the logfile {} to the HDF5 file.".format(logfile))
             added_logfiles = {'path': [], 'basename': [], 'dt': []}
@@ -66,6 +68,9 @@ def main():
             logfiles = pd.DataFrame.from_dict(added_logfiles)
             logfiles.set_index('dt', drop=True, inplace=True)
             store.append('logfiles', logfiles, format='t', append=True, min_itemsize=200)
+        else:
+            print("Logfile {} already contained in the HDF5 file.".format(logfile))
+    print()
     store.close()
 
     ## Calculate unique dates from the timestamp index column:
