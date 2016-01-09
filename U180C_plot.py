@@ -269,11 +269,16 @@ class U180CPlotService(object):
     def total_energy_detrended_plot(self):
         """ Plots the energy counter value of time with its overall linear trend removed """
 
+        try:
+            import statsmodels.api
+        except:
+            sys.stderr.write("statsmodels is missing: pip install statsmodels patsy\n")
+            return
+
         colname = 'kWhSYS_BIL'
 
         col = self.df[colname]
 
-        # pip install statsmodels patsy
         dfr = self.df[colname].resample('30min', how='mean')
         #dfr /= 1000.
         dfr = dfr.dropna()
