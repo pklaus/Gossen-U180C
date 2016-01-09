@@ -224,7 +224,12 @@ class U180CPlotService(object):
             gd = np.zeros([ndays, int(60*60*24/120)])
             i = 0
             while i < ndays:
-                gd[i] = ds[(first_date + timedelta(days=i)).isoformat()]
+                try:
+                    day = first_date + timedelta(days=i)
+                    gd[i] = ds[day.isoformat()]
+                except Exception as e:
+                    print("Could not slice the data for day %s" % day)
+                    print(e)
                 i += 1
             return gd
 
