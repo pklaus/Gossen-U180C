@@ -339,6 +339,47 @@ class U180CPlotService(object):
         ax.set_ylabel("kWh")
         plt.savefig(self.fn('energy_used_per_day.png'), bbox_inches='tight')
 
+    def energy_used_per_weekday_plot(self):
+        """ energy used per weekday """
+        dfr = self.df.loc[:,['kWhSYS_imp']].resample("D", how=['min', 'max'])
+        dfr = dfr['kWhSYS_imp']['max'] - dfr['kWhSYS_imp']['min']
+        dfr = pd.DataFrame(dfr)
+        dfr.columns = ['SYS']
+        complete_data = self.days_with_early_and_late_data()
+        for date_time in complete_data.index:
+            if not complete_data.ix[date_time]:
+                dfr.ix[date_time]['SYS'] = float('nan')
+        dfr /= 1000.
+        dfr = dfr.groupby(lambda x: x.weekday)
+        dfx = dfr.quantile([.01, .05, .2, .5, .8, .95, .99])
+        dfx = dfx.unstack(level=-1)['SYS']
+        dfx.insert(0, 'Mean', dfr.mean())
+        #import pdb; pdb.set_trace()
+        dfx.index = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        dfx.columns = ['Mean', '1%', '5%', '20%', 'Median', '80%', '95%', '99%']
+        ax = dfx.plot(title='average energy used per weekday', lw=2,colormap='jet',marker='.',markersize=10, colors=['r', '.9', '.8', '.6', '.4', '.6', '.8', '.9'])
+        ax.set_ylabel("kWh")
+        plt.savefig(self.fn('average_energy_used_per_weekday.png'), bbox_inches='tight')
+
+    def energy_used_per_weekday_box_plot(self):
+        """ energy used per weekday boxplot """
+        dfr = self.df.loc[:,['kWhSYS_imp']].resample("D", how=['min', 'max'])
+        dfr = dfr['kWhSYS_imp']['max'] - dfr['kWhSYS_imp']['min']
+        dfr = pd.DataFrame(dfr)
+        dfr.columns = ['SYS']
+        dfr /= 1000.
+        complete_data = self.days_with_early_and_late_data()
+        for date_time in complete_data.index:
+            if not complete_data.ix[date_time]:
+                dfr.ix[date_time]['SYS'] = float('nan')
+        dfx = dfr.groupby(lambda x: x.weekday)
+        #dfx.columns = dfx.columns.droplevel(level=1)
+        fig = plt.figure(num=None, figsize=(6, 4.5), dpi=self.DPI, facecolor='w', edgecolor='k')
+        ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+        dfx.boxplot(subplots=False, ax=ax)
+        ax.set_ylabel("kWh")
+        plt.savefig(self.fn('energy_used_per_weekday_boxplot.png'), bbox_inches='tight')
+
     def fn(self, name):
         """ returns the full filename """
         return os.path.join(self.output_folder, name)
