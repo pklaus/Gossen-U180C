@@ -1,9 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from bottle import Bottle, request, response, view, static_file, TEMPLATE_PATH
+from bottle import Bottle, request, response, jinja2_view as view, static_file, TEMPLATE_PATH
 from U180C_analyze import read_data_file
 from datetime import date, timedelta
+import os
+
+# https://github.com/pklaus/MightyWatt_Python/blob/master/mightywatt/webapp/__init__.py
+PATH = './'
+
+def translate_relative_date(name):
+    if name.startswith('today'):
+        if '-' in name:
+            return (date.today() - timedelta(days=int(name.split('-')[1]))).isoformat()
+        elif '+' in name:
+            return (date.today() + timedelta(days=int(name.split('+')[1]))).isoformat()
+        else:
+            return date.today().isoformat()
+    if name == 'yesterday':
+        return (date.today() - timedelta(days=1)).isoformat()
+    if name == 'dbfyesterday':
+        return (date.today() - timedelta(days=2)).isoformat()
+    if name == 'last_week':
+        return (date.today() - timedelta(days=7)).isoformat() + ',' + date.today().isoformat()
+    return name
 
 class U180CPlotWebServerAPI(Bottle):
 
@@ -37,6 +57,7 @@ class U180CPlotWebServerAPI(Bottle):
 
         # Handling of URL query variables
         q_range = request.query.range
+        q_range = translate_relative_date(q_range)
         if q_range:
             if ',' in q_range:
                 q_range = q_range.split(',')
@@ -104,11 +125,29 @@ class U180CPlotWebServer(Bottle):
         super(U180CPlotWebServer, self).__init__()
         self.mount('/api', U180CPlotWebServerAPI(df))
         self.route('/',     callback = self._index)
-        #self.route('/static/<filename:path>', callback = self._serve_static)
+        self.route('/dashboard',     callback = self._dashboard)
+        self.route('/dashboard/<preset>',     callback = self._dashboard)
+        self.route('/static/<filename:path>', callback = self._serve_static)
 
     @view('index')
     def _index(self):
-        return {'yesterday': (date.today() - timedelta(days=1)).isoformat()}
+        return {'yesterday': translate_relative_date('yesterday')}
+
+    @view('dashboard')
+    def _dashboard(self, preset='power'):
+        PRESETS = {
+          'power': dict(measures='P1,P2,P3', plot_title='Power'),
+          'energy': dict(measures='kWhSYS_BIL', plot_title='Energy'),
+          'frequency': dict(measures='F', plot_title='Frequency'),
+          'voltages': dict(measures='V1N,V2N,V3N', plot_title='Voltages'),
+        }
+        plot_title = PRESETS[preset]['plot_title']
+        measures = PRESETS[preset]['measures']
+        return {'plot_title': plot_title, 'measures': measures, 'range': request.query.range or 'yesterday', 'preset': preset}
+
+    def _serve_static(self, filename):
+        return static_file(filename, root=os.path.join(PATH, 'static'))
+
 
 def main():
     import argparse
