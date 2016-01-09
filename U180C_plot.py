@@ -310,7 +310,7 @@ class U180CPlotService(object):
         ax = ac_series.plot()
         #ols_df.plot(ax=ax)
         ax.plot((ac_series.index.min(), ac_series.index.max()), (0,0), 'r-')
-        ax.set_ylabel('Total energy consumed w/o linear trend [kWh]')
+        ax.set_ylabel('Total energy used w/o linear trend [kWh]')
         ax.set_xlabel('')
         kwargs = dict(horizontalalignment='center',verticalalignment='center',transform = ax.transAxes)
         linear_trend_msg = 'Linear trend (average power): {:.1f} kWh/day = {:.0f} W'.format(slope, slope*1000/24)
@@ -319,8 +319,8 @@ class U180CPlotService(object):
         ax.text(0.5, 0.05, 'Negative slope: under avg consumption', **kwargs)
         plt.savefig(self.fn('total_energy_detrended.png'), bbox_inches='tight')
 
-    def energy_consumed_per_day_plot(self):
-        """ energy consumed (on each phase) per day """
+    def energy_used_per_day_plot(self):
+        """ energy used (on each phase) per day """
         dfr = self.df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D", how=['min', 'max'])
         dfr['L1'] = dfr['kWh1_imp']['max'] - dfr['kWh1_imp']['min']
         dfr['L2'] = dfr['kWh2_imp']['max'] - dfr['kWh2_imp']['min']
@@ -337,7 +337,7 @@ class U180CPlotService(object):
         dfr['all'] = dfr.L1 + dfr.L2 + dfr.L3
         ax = dfr.plot(title='energy used per day', lw=2,colormap='jet',marker='.',markersize=10)
         ax.set_ylabel("kWh")
-        plt.savefig(self.fn('energy_consumed_per_day.png'), bbox_inches='tight')
+        plt.savefig(self.fn('energy_used_per_day.png'), bbox_inches='tight')
 
     def fn(self, name):
         """ returns the full filename """
