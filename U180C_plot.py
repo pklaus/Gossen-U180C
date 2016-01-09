@@ -19,7 +19,7 @@ import inspect
 
 # change the default plot size:
 pylab.rcParams['figure.figsize'] = 10, 6
-matplotlib.rcParams['agg.path.chunksize'] = 200000
+matplotlib.rcParams['agg.path.chunksize'] = 10000
 
 def main():
     parser = argparse.ArgumentParser(description='Analysis software for a U189A energy counter with U180C LAN interface.')
