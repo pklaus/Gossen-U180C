@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pandas as pd
+import matplotlib
 from matplotlib import pyplot as plt, pylab
 import matplotlib.dates as mdates
 from matplotlib.dates import DateFormatter
@@ -18,7 +19,7 @@ import inspect
 
 # change the default plot size:
 pylab.rcParams['figure.figsize'] = 10, 6
-
+matplotlib.rcParams['agg.path.chunksize'] = 200000
 
 def main():
     parser = argparse.ArgumentParser(description='Analysis software for a U189A energy counter with U180C LAN interface.')
