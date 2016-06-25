@@ -305,7 +305,7 @@ class U180CPlotService(object):
         #ac_series -= dfr[colname][0]
         ac_series -= y[0]
         ac_series /= 1000.
-        slope = y_range / time_range.total_seconds() / 1000 * 24*3600
+        slope = (y_range/1000) / time_range.total_seconds() * (24*3600*365)
 
         plt.figure()
         ax = ac_series.plot()
@@ -314,7 +314,7 @@ class U180CPlotService(object):
         ax.set_ylabel('Total energy used w/o linear trend [kWh]')
         ax.set_xlabel('')
         kwargs = dict(horizontalalignment='center',verticalalignment='center',transform = ax.transAxes)
-        linear_trend_msg = 'Linear trend (average power): {:.1f} kWh/day = {:.0f} W'.format(slope, slope*1000/24)
+        linear_trend_msg = 'Linear trend (average power): {:.1f} kWh/year = {:.0f} W'.format(slope, slope*1000/24/365)
         ax.text(0.5, 0.18, linear_trend_msg, **kwargs)
         ax.text(0.5, 0.10, 'Positive slope:   over  avg consumption', **kwargs)
         ax.text(0.5, 0.05, 'Negative slope: under avg consumption', **kwargs)
