@@ -120,7 +120,10 @@ class U180CPlotService(object):
 
     def five_min_avg_min_max_band_plot(self):
         """ 5min avg and min-max-band plot """
-        dfr = self.df.loc[:,['P1', 'P2', 'P3', 'PSYS']].resample("5min", how=['min', 'max', 'mean'])
+        dfr = self.df.loc[:,['P1', 'P2', 'P3', 'PSYS']].resample("5min")
+        dfr_min = dfr.min()
+        dfr_max = dfr.max()
+        dfr_mean = dfr.mean()
         # for the phases individually:
         number_of_days = self.number_of_days()
         figsize = (min(5*number_of_days, 30000/self.DPI), 6)
@@ -130,12 +133,12 @@ class U180CPlotService(object):
         plt.setp(labels, rotation=20, horizontalalignment='right')
         formatter = DateFormatter('%b %d %Y')
         ax.xaxis.set_major_formatter(formatter)  
-        ax.plot(dfr.index, dfr.P1['mean'])
-        ax.fill_between(dfr.index, dfr.P1['min'],dfr.P1['max'],facecolor='b',alpha=0.5)
-        ax.plot(dfr.index, dfr.P2['mean'])
-        ax.fill_between(dfr.index, dfr.P2['min'],dfr.P2['max'],facecolor='g',alpha=0.5)
-        ax.plot(dfr.index, dfr.P3['mean'])
-        ax.fill_between(dfr.index, dfr.P3['min'],dfr.P3['max'],facecolor='r',alpha=0.5)
+        ax.plot(dfr_mean.index, dfr_mean.P1)
+        ax.fill_between(dfr_min.index, dfr_min.P1, dfr_max.P1, facecolor='b', alpha=0.5)
+        ax.plot(dfr_mean.index, dfr_mean.P2)
+        ax.fill_between(dfr_min.index, dfr_min.P2, dfr_max.P2, facecolor='g', alpha=0.5)
+        ax.plot(dfr_mean.index, dfr_mean.P3)
+        ax.fill_between(dfr_min.index, dfr_min.P3, dfr_max.P3, facecolor='r', alpha=0.5)
         start, end = ax.get_xlim()
         ax.xaxis.set_ticks(np.arange(start, end, 1.0))
         ax.xaxis.grid(True, which="major")
@@ -149,8 +152,8 @@ class U180CPlotService(object):
         plt.setp(labels, rotation=20, horizontalalignment='right')
         formatter = DateFormatter('%b %d %Y')
         ax.xaxis.set_major_formatter(formatter)  
-        ax.plot(dfr.index, dfr.PSYS['mean'])
-        ax.fill_between(dfr.index, dfr.PSYS['min'],dfr.PSYS['max'],facecolor='r',alpha=0.5)
+        ax.plot(dfr_mean.index, dfr_mean.PSYS)
+        ax.fill_between(dfr_min.index, dfr_min.PSYS, dfr_max.PSYS, facecolor='r', alpha=0.5)
         start, end = ax.get_xlim()
         ax.xaxis.set_ticks(np.arange(start, end, 1.0))
         ax.xaxis.grid(True, which="major")
@@ -214,14 +217,14 @@ class U180CPlotService(object):
         def day_power(ds, first_date, ndays):
             # ds: data series
             # returns a matrix with one power diff histogram per day
-            ds = ds.resample('2min')
+            ds = ds.resample('2min').mean()
             if ds.index[0].time() != datetime.time(0, 0):
                 # enlarging the DataFrame at the start of the data (to a full day)
                 ds.loc[dt.combine(ds.index[0].date(), datetime.time(0,0))] = float('nan')
             if ds.index[-1].time() != datetime.time(0, 0):
                 # enlarging the DataFrame at the end of the data (to a full day)
                 ds.loc[dt.combine(ds.index[-1].date()+timedelta(days=1), datetime.time(0,0))] = float('nan')
-            ds = ds.resample('2min')
+            ds = ds.resample('2min').mean()
             gd = np.zeros([ndays, int(60*60*24/120)])
             i = 0
             while i < ndays:
@@ -280,7 +283,7 @@ class U180CPlotService(object):
 
         col = self.df[colname]
 
-        dfr = self.df[colname].resample('30min', how='mean')
+        dfr = self.df[colname].resample('30min').mean()
         #dfr /= 1000.
         dfr = dfr.dropna()
         dfr = dfr.reset_index()
@@ -322,12 +325,13 @@ class U180CPlotService(object):
 
     def energy_used_per_day_plot(self):
         """ energy used (on each phase) per day """
-        dfr = self.df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D", how=['min', 'max'])
-        dfr['L1'] = dfr['kWh1_imp']['max'] - dfr['kWh1_imp']['min']
-        dfr['L2'] = dfr['kWh2_imp']['max'] - dfr['kWh2_imp']['min']
-        dfr['L3'] = dfr['kWh3_imp']['max'] - dfr['kWh3_imp']['min']
-        dfr.columns = dfr.columns.droplevel(level=1)
-        dfr = dfr.loc[:, ['L1', 'L2', 'L3']]
+        dfr = self.df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("D")
+        dfr_min = dfr.min()
+        dfr_max = dfr.max()
+        dfr = pd.DataFrame()
+        dfr['L1'] = dfr_max['kWh1_imp'] - dfr_min['kWh1_imp']
+        dfr['L2'] = dfr_max['kWh2_imp'] - dfr_min['kWh2_imp']
+        dfr['L3'] = dfr_max['kWh3_imp'] - dfr_min['kWh3_imp']
         complete_data = self.days_with_early_and_late_data()
         for date_time in complete_data.index:
             if not complete_data.ix[date_time]:
@@ -342,8 +346,10 @@ class U180CPlotService(object):
 
     def energy_used_per_weekday_plot(self):
         """ energy used per weekday """
-        dfr = self.df.loc[:,['kWhSYS_imp']].resample("D", how=['min', 'max'])
-        dfr = dfr['kWhSYS_imp']['max'] - dfr['kWhSYS_imp']['min']
+        dfr = self.df.loc[:,['kWhSYS_imp']].resample("D")
+        dfr_min = dfr.min()
+        dfr_max = dfr.max()
+        dfr = dfr_max['kWhSYS_imp'] - dfr_min['kWhSYS_imp']
         dfr = pd.DataFrame(dfr)
         dfr.columns = ['SYS']
         complete_data = self.days_with_early_and_late_data()
@@ -364,8 +370,10 @@ class U180CPlotService(object):
 
     def energy_used_per_weekday_box_plot(self):
         """ energy used per weekday boxplot """
-        dfr = self.df.loc[:,['kWhSYS_imp']].resample("D", how=['min', 'max'])
-        dfr = dfr['kWhSYS_imp']['max'] - dfr['kWhSYS_imp']['min']
+        dfr = self.df.loc[:,['kWhSYS_imp']].resample("D")
+        dfr_min = dfr.min()
+        dfr_max = dfr.max()
+        dfr = dfr_max['kWhSYS_imp'] - dfr_min['kWhSYS_imp']
         dfr = pd.DataFrame(dfr)
         dfr.columns = ['SYS']
         dfr /= 1000.
