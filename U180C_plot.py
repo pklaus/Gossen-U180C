@@ -344,6 +344,21 @@ class U180CPlotService(object):
         ax.set_ylabel("kWh")
         plt.savefig(self.fn('energy_used_per_day.png'), bbox_inches='tight')
 
+    def energy_used_per_week_plot(self):
+        """ energy used (on each phase) per week """
+        dfr = self.df.loc[:,['kWh1_imp','kWh2_imp', 'kWh3_imp']].resample("W-MON")
+        dfr_min = dfr.min()
+        dfr_max = dfr.max()
+        dfr = pd.DataFrame()
+        dfr['L1'] = dfr_max['kWh1_imp'] - dfr_min['kWh1_imp']
+        dfr['L2'] = dfr_max['kWh2_imp'] - dfr_min['kWh2_imp']
+        dfr['L3'] = dfr_max['kWh3_imp'] - dfr_min['kWh3_imp']
+        dfr /= 1000.
+        dfr['all'] = dfr.L1 + dfr.L2 + dfr.L3
+        ax = dfr.plot(title='energy used per week', lw=2,colormap='jet',marker='.',markersize=10)
+        ax.set_ylabel("kWh")
+        plt.savefig(self.fn('energy_used_per_week.png'), bbox_inches='tight')
+
     def energy_used_per_weekday_plot(self):
         """ energy used per weekday """
         dfr = self.df.loc[:,['kWhSYS_imp']].resample("D")
